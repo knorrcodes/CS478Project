@@ -1,0 +1,45 @@
+Products
+	-ID
+	-Name
+	-Desc
+	-Picture
+	-Price
+	-Category->Categories
+	-WSCost
+	-NumofSides
+
+Categories
+	-ID
+	-Name
+
+Servers
+	-ID
+	-Name
+	-Code
+
+Orders
+	-ID
+	-Starttime
+	-Endtime
+	-Table->Tables
+	-Server->Servers
+
+Tables
+	-ID
+	-tableNum
+
+CustCodes
+	-ID
+	-Starttime
+	-Endtime
+	-Code
+	-Order->Orders
+
+OrderItems
+	-ID
+	-Products->JSON Array
+	-Order->Orders
+
+
+
+
