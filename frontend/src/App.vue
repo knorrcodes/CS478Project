@@ -1,9 +1,10 @@
 <template>
-  <div id="app">
+  <div class="background" id="app">
     <div id="nav">
       <router-link to="/">Home</router-link>|
       <router-link to="/about">About</router-link>
       <div>Hello there</div>
+      <img src="../../docs/biglogo.png" alt="biglogo" />
       <comp1 />
     </div>
   </div>
@@ -21,4 +22,7 @@ export default {
 </script>
 
 <style>
+.background {
+  background: firebrick;
+}
 </style>
