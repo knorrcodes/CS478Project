@@ -1,28 +1,34 @@
 <template>
   <div class="background" id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link>|
-      <router-link to="/about">About</router-link>
-      <div>Hello there</div>
-      <img src="../../docs/biglogo.png" alt="biglogo" />
-      <comp1 />
+    <div>
+      <img class="logoImage" src="../../docs/biglogo.png" alt="biglogo" />
     </div>
+    <div id="login"></div>
+    <login-screen />
   </div>
 </template>
 
 <script>
-import comp1 from "./components/comp1.vue";
+import loginScreen from "./components/loginScreen.vue";
 
 export default {
   name: "app",
   components: {
-    comp1
+    loginScreen
   }
 };
 </script>
 
 <style>
-.background {
-  background: firebrick;
+body {
+  background-color: firebrick;
+  height: 100%;
+}
+
+.logoImage {
+  height: 200;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
