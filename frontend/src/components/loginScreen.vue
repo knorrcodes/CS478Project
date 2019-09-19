@@ -4,21 +4,35 @@
       <div class="row justify-content-center">
         <form action>
           <p class="text-center">Server Login</p>
-          <input class="input1" id="serverCodeNumber" type="number" value />
+          <input id="serverCodeNumber" class="form-control" v-model="serverCode" type="number" />
           <br />
-          <button class="input1" id="serverCodeButton" @click="serverCode()">Enter</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="serverCodeButton"
+            @click="serverCodeCheck"
+          >Enter</button>
         </form>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: "loginScreen"
-};
+<script lang="ts">
+import { Component, Vue, Prop } from "vue-property-decorator";
 
-function serverCode() {}
+@Component
+export default class loginScreen extends Vue {
+  private serverCode: Number = 0;
+
+  private serverCodeCheck() {
+    if (this.serverCode == 478) {
+      console.log("code is valid");
+    } else {
+      console.log("code is not valid");
+    }
+  }
+}
 </script>
 
 <style scoped>

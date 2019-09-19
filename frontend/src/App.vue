@@ -20,9 +20,9 @@ export default {
 </script>
 
 <style>
-body {
-  background-color: firebrick;
-  height: 100%;
+.background {
+  background-color: rgb(255, 111, 111);
+  height: 100vh;
 }
 
 .logoImage {
