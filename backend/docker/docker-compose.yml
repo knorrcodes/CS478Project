@@ -1,0 +1,23 @@
+version: '3.6'
+services:
+    pos-backend:
+        image: alpine:edge
+        container_name: 'pos-backend'
+        depends_on:
+            - pos-database
+        links:
+            - pos-database
+        volumes:
+            - ./config.toml:/app/config.toml:ro
+            - ../bin/koala-pos:/app/koala-pos
+        ports:
+            - 8080:8080
+        command: /app/koala-pos -c /app/config.toml
+
+    pos-database:
+        image: mariadb:latest
+        container_name: 'pos-database'
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: koala-pos
+        command: mysqld --ansi --sql-mode=ANSI,TRADITIONAL
