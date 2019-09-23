@@ -24,7 +24,6 @@ export default class ApiClass {
 
 
 
-
 /*
 export interface
 
