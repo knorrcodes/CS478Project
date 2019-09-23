@@ -113,7 +113,8 @@ func (m *database) createTables(d *common.DatabaseAccessor) error {
 			}
 		}
 	}
-	return nil
+
+	return m.buildConstraints(d)
 }
 
 func (m *database) migrateTables(d *common.DatabaseAccessor, c *common.Config) error {
@@ -155,7 +156,7 @@ func (m *database) migrateTables(d *common.DatabaseAccessor, c *common.Config) e
 func (m *database) createSettingTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "settings" (
 		"id" VARCHAR(255) PRIMARY KEY NOT NULL,
-		"value" TEXT
+		"value" TEXT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8`
 
 	if _, err := d.DB.Exec(sql); err != nil {
@@ -168,7 +169,15 @@ func (m *database) createSettingTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createProductTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "product" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"name" TINYTEXT NOT NULL,
+		"desc" TEXT NOT NULL,
+		"picture" TINYTEXT NOT NULL,
+		"price" INT NOT NULL,
+		"category_id" INT NOT NULL,
+		"ws_cost" INT NOT NULL,
+		"num_of_sides" TINYINT NOT NULL,
+		INDEX ("category_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -176,7 +185,8 @@ func (m *database) createProductTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createCategoryTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "category" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"name" TINYTEXT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -184,7 +194,9 @@ func (m *database) createCategoryTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "server" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"name" TINYTEXT NOT NULL,
+		"code" MEDIUMINT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -192,7 +204,12 @@ func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createOrderTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "order" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"starttime" DATETIME NOT NULL,
+		"endtime" DATETIME NOT NULL,
+		"table_id" INT NOT NULL,
+		"server_id" INT NOT NULL,
+		INDEX ("table_id", "server_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -200,7 +217,8 @@ func (m *database) createOrderTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createTableTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "table" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"table_num" INT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -208,7 +226,12 @@ func (m *database) createTableTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createCustCodeTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "cust_code" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"starttime" DATETIME NOT NULL,
+		"endtime" DATETIME NOT NULL,
+		"code" TINYTEXT NOT NULL,
+		"order_id" INT NOT NULL,
+		INDEX ("order_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
@@ -216,8 +239,38 @@ func (m *database) createCustCodeTable(d *common.DatabaseAccessor) error {
 
 func (m *database) createOrderItemTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "order_item" (
-		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"products" JSON NOT NULL,
+		"order_id" INT NOT NULL,
+		INDEX ("order_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)
 	return err
+}
+
+func (m *database) buildConstraints(d *common.DatabaseAccessor) error {
+	alterStmts := []string{
+		`ALTER TABLE "product"
+			ADD FOREIGN KEY ("category_id")
+			REFERENCES "category" ("id")`,
+		`ALTER TABLE "order"
+			ADD FOREIGN KEY ("table_id")
+			REFERENCES "table" ("id")`,
+		`ALTER TABLE "order"
+			ADD FOREIGN KEY ("server_id")
+			REFERENCES "server" ("id")`,
+		`ALTER TABLE "cust_code"
+			ADD FOREIGN KEY ("order_id")
+			REFERENCES "order" ("id")`,
+		`ALTER TABLE "order_item"
+			ADD FOREIGN KEY ("order_id")
+			REFERENCES "order" ("id")`,
+	}
+
+	for _, stmt := range alterStmts {
+		if _, err := d.DB.Exec(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
 }
