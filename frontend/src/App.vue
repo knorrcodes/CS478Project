@@ -5,17 +5,34 @@
     </div>
     <div id="login"></div>
     <login-screen />
+    {{apiData}}
   </div>
 </template>
 
 <script>
 import loginScreen from "./components/loginScreen.vue";
+import ApiClass from "./api";
+
+const axios = require("axios");
+
 
 export default {
   name: "app",
   components: {
     loginScreen
+  },
+  data() {
+    return {
+      apiData: null
+    };
   }
+  /*
+  mounted() {
+    axios
+      .get("https://api.coindesk.com/v1/bpi/currentprice.json")
+      .then(results => (this.apiData = results))
+      .catch(err => console.log(this.err));
+  } */
 };
 </script>
 
