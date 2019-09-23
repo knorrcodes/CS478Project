@@ -20,4 +20,9 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: koala-pos
+        volumes:
+            - pos-db-data:/var/lib/mysql
         command: mysqld --ansi --sql-mode=ANSI,TRADITIONAL
+
+volumes:
+    pos-db-data:
