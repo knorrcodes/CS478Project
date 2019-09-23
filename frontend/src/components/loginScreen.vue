@@ -18,7 +18,13 @@
             id="serverCodeButton"
             @click="serverCodeCheck"
           >Enter</button>
+          <br />
+          <br />
+          <button type="button" class="btn btn-primary" @click="getAllTestData">test data</button>
         </form>
+        <div v-if="clicked">
+          <p>{{apiData}}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -31,7 +37,8 @@ import ApiClass from "../api";
 @Component
 export default class loginScreen extends Vue {
   private serverCode: Number = 0;
-  // private apiData: String = null;
+  private apiData: String = "";
+  clicked: boolean = false;
 
   private serverCodeCheck() {
     if (this.serverCode == 478) {
@@ -61,5 +68,13 @@ export default class loginScreen extends Vue {
 .textFormat {
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
   font-size: 18pt;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
 }
 </style>

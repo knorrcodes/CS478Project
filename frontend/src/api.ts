@@ -3,11 +3,18 @@ import axios from 'axios';
 
 export default class ApiClass {
 
-    public getAllDataTest(URL: string, apiData: any) {
-        axios
-            .get(URL)
-            .then((response) => (apiData = response))
-            .catch((err) => (err));
+    /*    public getAllDataTest(URL: string, apiData: any) {
+           axios
+               .get(URL)
+               .then((response) => (apiData = response))
+               .catch((err) => (err));
+       } */
+
+    public getAllTestData(URL: string, apiData: any) {
+        /*         this.clicked = !this.clicked;*/
+        fetch("https://jsonplaceholder.typicode.com/todos")
+            .then((response) => response.json())
+            .then((json) => (apiData = json));
     }
 }
 
