@@ -116,9 +116,9 @@ func startShutdownWatcher(e *common.Environment) {
 }
 
 func displayVersionInfo() {
-	fmt.Printf(`Packet Guardian - (C) 2016 The Packet Guardian Authors
+	fmt.Printf(`Packet Guardian - (C) 2019 The Koala POS Authors
 
-Component:   Web Server
+Component:   API Server
 Version:     %s
 Built:       %s
 Compiled by: %s

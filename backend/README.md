@@ -3,22 +3,28 @@
 ## Build Requirements
 
 - Go 1.13+
-- Make
 - Docker
 
 ## Building
 
-Change directory to the backend folder and run `make build-in-docker`.
+Change directory to the backend folder and run `go run mage.go`.
 
 ```shell
 cd $REPO/backend
-make build-in-docker
+go run mage.go // Runs the build target in magefile.go
 ```
 
-The command will download the golang Docker image and build the application
-inside. The executable will be in the bin directory.
+### Building for Docker
+
+Run the `buildInDocker` target.
+
+```shell
+go run mage.go buildInDocker
+```
 
 ## Running Dev Server
+
+Make sure to build the application for Docker deployment first.
 
 To run the application in development mode, cd into the docker folder and run
 `docker-compose up -d`.
