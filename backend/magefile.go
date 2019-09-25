@@ -65,7 +65,7 @@ func BuildInDocker() error {
 		"-v", fmt.Sprintf("%s/..:/usr/src/koala-pos", pwd),
 		"-v", fmt.Sprintf("%s/pkg/mod:/go/pkg/mod", gopath),
 		"-w", "/usr/src/koala-pos/backend",
-		"golang:1.13", "go", "run", "mage.go",
+		"golang:1.13-alpine", "go", "run", "mage.go",
 	)
 	return err
 }
