@@ -70,10 +70,32 @@ func BuildInDocker() error {
 	return err
 }
 
+func RunDev() error {
+	mg.Deps(BuildInDocker)
+	os.Chdir("docker")
+	return sh.RunV("docker-compose", "up", "-d")
+}
+
+func RunDevLogs() error {
+	mg.Deps(BuildInDocker, RunDev)
+	return sh.RunV("docker-compose", "logs", "-f")
+}
+
+func StopDev() error {
+	os.Chdir("docker")
+	return sh.RunV("docker-compose", "down")
+}
+
+func StopDevClean() error {
+	os.Chdir("docker")
+	return sh.RunV("docker-compose", "down", "-v")
+}
+
 func Clean() {
 	sh.Rm("./bin/*")
 	sh.Rm("./logs/*")
 	sh.Rm("./sessions/*")
+	mg.Deps(StopDevClean)
 }
 
 func Test() error {
