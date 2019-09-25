@@ -198,7 +198,12 @@ func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 		"name" TINYTEXT NOT NULL,
 		"code" MEDIUMINT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
-	_, err := d.DB.Exec(sql)
+
+	if _, err := d.DB.Exec(sql); err != nil {
+		return err
+	}
+
+	_, err := d.DB.Exec(`INSERT INTO "server" ("name", "code") VALUES ('Default Server', 478)`)
 	return err
 }
 
