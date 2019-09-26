@@ -43,6 +43,10 @@ func Build() error {
 	return err
 }
 
+func Generate() error {
+	return sh.RunV("go", "generate", "./...")
+}
+
 func BuildInDocker() error {
 	pwd, _ := os.Getwd()
 	gopath, _ := os.LookupEnv("GOPATH")

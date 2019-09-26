@@ -1,16 +1,11 @@
 package models
 
-import (
-	"koala.pos/src/common"
-)
-
 type ProductStore interface {
 	Save(*Product) error
 	Delete(*Product) error
 }
 
 type Product struct {
-	e          *common.Environment
 	store      ProductStore
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
@@ -23,9 +18,8 @@ type Product struct {
 }
 
 // NewProduct creates a new product object
-func NewProduct(e *common.Environment, ps ProductStore) *Product {
+func NewProduct(ps ProductStore) *Product {
 	return &Product{
-		e:     e,
 		store: ps,
 	}
 }
