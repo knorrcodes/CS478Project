@@ -8,9 +8,10 @@ import (
 )
 
 type ProductStore interface {
+	GetProducts() ([]*models.Product, error)
 	GetProductByID(id int) (*models.Product, error)
-	Save(u *models.Product) error
-	Delete(u *models.Product) error
+	Save(p *models.Product) error
+	Delete(p *models.Product) error
 }
 
 type Product struct {
@@ -23,17 +24,21 @@ func NewProductStore(e *common.Environment) *Product {
 	}
 }
 
+func (s *Product) GetProducts() ([]*models.Product, error) {
+	return s.getProductsFromDatabase("")
+}
+
 func (s *Product) GetProductByID(id int) (*models.Product, error) {
 	if id == 0 {
 		return nil, errors.New("Product ID required")
 	}
 
 	sql := `WHERE "id" = ?`
-	users, err := s.getProductsFromDatabase(sql, id)
-	if len(users) == 0 {
+	products, err := s.getProductsFromDatabase(sql, id)
+	if len(products) == 0 {
 		return nil, err
 	}
-	return users[0], err
+	return products[0], err
 }
 
 func (s *Product) getProductsFromDatabase(where string, values ...interface{}) ([]*models.Product, error) {
@@ -43,7 +48,7 @@ func (s *Product) getProductsFromDatabase(where string, values ...interface{}) (
 				"desc",
 				"picture",
 				"price",
-				"category",
+				"category_id",
 				"ws_cost",
 				"num_of_sides"
 			FROM "product" ` + where
@@ -79,7 +84,7 @@ func (s *Product) getProductsFromDatabase(where string, values ...interface{}) (
 			continue
 		}
 
-		product := models.NewProduct(s.e, s)
+		product := models.NewProduct(s)
 		product.ID = id
 		product.Name = name
 		product.Desc = desc
@@ -102,10 +107,60 @@ func (s *Product) Save(p *models.Product) error {
 }
 
 func (s *Product) updateExisting(p *models.Product) error {
-	return nil
+	sql := `UPDATE "product"
+			SET	"name" = ?,
+				"desc" = ?,
+				"picture" = ?,
+				"price" = ?,
+				"category_id" = ?,
+				"ws_cost" = ?,
+				"num_of_sides" = ?
+			WHERE "id" = ?`
+
+	_, err := s.e.DB.Exec(
+		sql,
+		p.Name,
+		p.Desc,
+		p.Picture,
+		p.Price,
+		p.Category,
+		p.WSCost,
+		p.NumOfSides,
+		p.ID,
+	)
+	return err
 }
 
 func (s *Product) saveNew(p *models.Product) error {
+	if p.Name == "" {
+		return errors.New("Product name cannot be empty")
+	}
+
+	sql := `INSERT INTO "product"
+				("name",
+				"desc",
+				"picture",
+				"price",
+				"category_id",
+				"ws_cost",
+				"num_of_sides") VALUES (?,?,?,?,?,?,?)`
+
+	result, err := s.e.DB.Exec(
+		sql,
+		p.Name,
+		p.Desc,
+		p.Picture,
+		p.Price,
+		p.Category,
+		p.WSCost,
+		p.NumOfSides,
+	)
+	if err != nil {
+		return err
+	}
+
+	id, _ := result.LastInsertId()
+	p.ID = int(id)
 	return nil
 }
 

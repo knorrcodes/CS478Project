@@ -69,8 +69,9 @@ func main() {
 		log.WithField("error", err).Fatal("System initialization failed")
 	}
 
-	appStores := stores.StoreCollection{
-		Product: stores.NewProductStore(e),
+	appStores := &stores.StoreCollection{
+		Product:  stores.NewProductStore(e),
+		Category: stores.NewCategoryStore(e),
 	}
 
 	// Start web server
