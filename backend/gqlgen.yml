@@ -1,0 +1,32 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+  - schema.graphql
+
+exec:
+  filename: src/graphql/generated.go
+  package: graphql
+
+model:
+  filename: src/graphql/models_gen.go
+  package: graphql
+
+resolver:
+  filename: src/graphql/resolver.go
+  package: graphql
+  type: Resolver
+
+autobind: []
+
+models:
+  Product:
+    model: koala.pos/src/models.Product
+  Category:
+    model: koala.pos/src/models.Category
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.IntID
+      - github.com/99designs/gqlgen/graphql.ID

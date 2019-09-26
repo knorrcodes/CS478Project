@@ -6,25 +6,32 @@ import (
 	"net/http/pprof"
 	"runtime"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/lfkeitel/verbose/v5"
 
 	"koala.pos/src/common"
 	"koala.pos/src/controllers"
+	"koala.pos/src/graphql"
 	"koala.pos/src/models/stores"
 	mid "koala.pos/src/server/middleware"
 )
 
-func LoadRoutes(e *common.Environment, stores stores.StoreCollection) http.Handler {
+func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Handler {
 	r := httprouter.New()
 	r.NotFound = http.HandlerFunc(notFoundHandler)
 
-	r.Handler("GET", "/api/*a", midStack(e, apiRouter(e, stores)))
-	r.Handler("POST", "/api/*a", midStack(e, apiRouter(e, stores)))
-	r.Handler("DELETE", "/api/*a", midStack(e, apiRouter(e, stores)))
+	r.HandlerFunc("GET", "/", handler.Playground("GraphQL playground", "/query"))
+	r.Handler("POST", "/query", midStack(e, stores, handler.GraphQL(
+		graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
+	)))
+
+	r.Handler("GET", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
+	r.Handler("POST", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
+	r.Handler("DELETE", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
 
 	if e.IsDev() {
-		r.Handler("GET", "/debug/*a", midStack(e, debugRouter(e)))
+		r.Handler("GET", "/debug/*a", midStack(e, stores, debugRouter(e)))
 		log.Debug("Profiling enabled")
 	}
 
@@ -33,8 +40,8 @@ func LoadRoutes(e *common.Environment, stores stores.StoreCollection) http.Handl
 	return h
 }
 
-func midStack(e *common.Environment, h http.Handler) http.Handler {
-	h = mid.SetSessionInfo(h, e) // Adds Environment and user information to requet context
+func midStack(e *common.Environment, stores *stores.StoreCollection, h http.Handler) http.Handler {
+	h = mid.SetSessionInfo(h, e, stores) // Adds Environment and user information to requet context
 	return h
 }
 
@@ -70,7 +77,7 @@ func heapStats(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func apiRouter(e *common.Environment, stores stores.StoreCollection) http.Handler {
+func apiRouter(e *common.Environment, stores *stores.StoreCollection) http.Handler {
 	r := httprouter.New()
 
 	productAPIController := controllers.NewProductController(e, stores.Product)
