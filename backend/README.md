@@ -5,41 +5,44 @@
 - Go 1.13+
 - Docker
 
+## Build and development scripts
+
+All build and dev helper scripts are implemented using
+[Mage](https://magefile.org/). You can get a list of targets by running `go run
+mage.go -l`. Run a Mage target with `go run mage.go TARGET`. All Mage targets
+must be ran inside the backend folder.
+
 ## Building
-
-Change directory to the backend folder and run `go run mage.go`.
-
-```shell
-cd $REPO/backend
-go run mage.go // Runs the build target in magefile.go
-```
-
-### Building for Docker
 
 Run the `buildInDocker` target.
 
 ```shell
+cd $REPO/backend
 go run mage.go buildInDocker
 ```
 
-## Running Dev Server
+## Running
 
-Make sure to build the application for Docker deployment first.
-
-To run the application in development mode, cd into the docker folder and run
-`docker-compose up -d`.
+Use either the `runDev` or `runDevLogs` Mage target.
 
 ```shell
-cd $REPO/backend/docker
-docker-compose up -d
+cd $REPO/backend
+go run mage.go runDev
+# or
+go run mage.go runDevLogs
 ```
 
-Once the application and database are started, the server will be available
-at `http://localhost:8080'. You can use `docker ps` to make sure both the
+`runDevLogs` will display application logs from the database and API to the
+terminal. I would recommend using this target for development. `runDev` will
+start the containers and exit not showing any logs.
+
+Once the application and database are started, the server will be available at
+`http://localhost:8080'. You can use `docker ps` to make sure both the
 application and database containers started.
 
-If you recompile the application, run `docker-compose restart pos-backed` to
-restart the application container with the new binary.
+If you recompile the application, run `go run mage.go restartDev` to restart the
+application container with the new binary.
 
 Database data is stored in a Docker volume and won't be destroyed unless you run
-`docker-compose down`. To stop the containers, use `docker-compose stop`.
+`go run mage.go StopDevClean`. To stop the containers, use `go run mage.go
+StopDev`.

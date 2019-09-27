@@ -14,12 +14,10 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-var Default = Build
+var Default = BuildInDocker
 
-func Lint() error {
-	return sh.RunV("golint", "./src/...")
-}
-
+// Will build the koala-pos binary, this target should only be used inside
+// the Docker container building the project.
 func Build() error {
 	ldflags := map[string]string{
 		"main.version":   getVersionString(),
@@ -43,10 +41,12 @@ func Build() error {
 	return err
 }
 
+// Generate GraphQL files
 func Generate() error {
 	return sh.RunV("go", "generate", "./...")
 }
 
+// Build the project inside a Docker container
 func BuildInDocker() error {
 	pwd, _ := os.Getwd()
 	gopath, _ := os.LookupEnv("GOPATH")
@@ -69,32 +69,43 @@ func BuildInDocker() error {
 		"-v", fmt.Sprintf("%s/..:/usr/src/koala-pos", pwd),
 		"-v", fmt.Sprintf("%s/pkg/mod:/go/pkg/mod", gopath),
 		"-w", "/usr/src/koala-pos/backend",
-		"golang:1.13-alpine", "go", "run", "mage.go",
+		"golang:1.13-alpine", "go", "run", "mage.go", "build",
 	)
 	return err
 }
 
+// Start the backend server and database
 func RunDev() error {
 	mg.Deps(BuildInDocker)
 	os.Chdir("docker")
 	return sh.RunV("docker-compose", "up", "-d")
 }
 
+// Start the backend server and database and show logs
 func RunDevLogs() error {
 	mg.Deps(BuildInDocker, RunDev)
 	return sh.RunV("docker-compose", "logs", "-f")
 }
 
+// Restart the backend server, useful after a rebuild
+func RestartDev() error {
+	os.Chdir("docker")
+	return sh.RunV("docker-compose", "restart", "pos-backend")
+}
+
+// Stop the backend server and database
 func StopDev() error {
 	os.Chdir("docker")
 	return sh.RunV("docker-compose", "down")
 }
 
+// Stop the backend server and database and delete database data
 func StopDevClean() error {
 	os.Chdir("docker")
 	return sh.RunV("docker-compose", "down", "-v")
 }
 
+// Remove build artifacts, logs, and Docker containers
 func Clean() {
 	sh.Rm("./bin/*")
 	sh.Rm("./logs/*")
@@ -102,13 +113,20 @@ func Clean() {
 	mg.Deps(StopDevClean)
 }
 
+// Run tests
 func Test() error {
 	mg.Deps(Lint)
 	return sh.RunV("go", "test", "./src/...")
 }
 
+// Ensure Go formatting
 func Format() error {
 	return sh.RunV("gofmt", "-s", "-l", "-d", "./src/*")
+}
+
+// Run golint
+func Lint() error {
+	return sh.RunV("golint", "./src/...")
 }
 
 func formatLDFlags(flags map[string]string) string {
