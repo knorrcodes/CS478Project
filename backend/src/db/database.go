@@ -171,15 +171,56 @@ func (m *database) createProductTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "product" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"name" TINYTEXT NOT NULL,
-		"desc" TEXT NOT NULL,
-		"picture" TINYTEXT NOT NULL,
+		"desc" TEXT NOT NULL DEFAULT (''),
+		"picture" TINYTEXT NOT NULL DEFAULT (''),
 		"price" INT NOT NULL,
 		"category_id" INT NOT NULL,
 		"ws_cost" INT NOT NULL,
-		"num_of_sides" TINYINT NOT NULL,
+		"num_of_sides" TINYINT NOT NULL DEFAULT (0),
 		INDEX ("category_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
-	_, err := d.DB.Exec(sql)
+
+	if _, err := d.DB.Exec(sql); err != nil {
+		return err
+	}
+
+	_, err := d.DB.Exec(`INSERT INTO "product"
+		("name", "price", "category_id", "ws_cost", "num_of_sides")
+		VALUES
+		('Teriyaki Chicken', 1250, 1, 0, 2),
+		('Grilled Chicken', 1150, 1, 0, 2),
+		('Chicken Salad', 899, 1, 0, 1),
+		('Chicken Tenders', 1099, 1, 0, 1),
+
+		('6oz Filet', 1199, 2, 0, 2),
+		('9oz Filet', 1499, 2, 0, 2),
+		('Steak Salad', 1199, 2, 0, 1),
+
+		('Wild Salmon', 1399, 3, 0, 2),
+		('Catfish Dinner', 1199, 3, 0, 2),
+		('Grilled Shrimp', 1299, 3, 0, 2),
+		('Lobster Tail', 1895, 3, 0, 2),
+
+		('All American Cheese Burger', 955, 4, 0, 1),
+		('Bacon Cheese Burger', 1155, 4, 0, 1),
+		('Veggie Burger', 1095, 4, 0, 1),
+
+		('Fried Pickles', 815, 5, 0, 0),
+		('Mozzarella Sticks', 735, 5, 0, 0),
+
+		('Epic Brownie', 650, 6, 0, 0),
+		('Fried Ice Cream', 550, 6, 0, 0),
+
+		('French Fries', 150, 7, 0, 0),
+		('Baked Potato', 150, 7, 0, 0),
+		('Broccoli', 150, 7, 0, 0),
+		('Rice', 150, 7, 0, 0),
+		('Asparagus', 150, 7, 0, 0),
+
+		('Coke', 200, 8, 0, 0),
+		('Tea', 200, 8, 0, 0),
+		('Water', 0, 8, 0, 0),
+		('Lemonaid', 200, 8, 0, 0)`)
 	return err
 }
 
@@ -188,7 +229,20 @@ func (m *database) createCategoryTable(d *common.DatabaseAccessor) error {
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"name" TINYTEXT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
-	_, err := d.DB.Exec(sql)
+
+	if _, err := d.DB.Exec(sql); err != nil {
+		return err
+	}
+
+	_, err := d.DB.Exec(`INSERT INTO "category" ("id", "name") VALUES
+							(1, 'Chicken'),
+							(2, 'Steak'),
+							(3, 'Fish'),
+							(4, 'Burger'),
+							(5, 'Appetizer'),
+							(6, 'Dessert'),
+							(7, 'Side'),
+							(8, 'Drink')`)
 	return err
 }
 
@@ -196,14 +250,17 @@ func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "server" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"name" TINYTEXT NOT NULL,
-		"code" MEDIUMINT NOT NULL
+		"code" MEDIUMINT NOT NULL,
+		"manager" BOOLEAN NOT NULL DEFAULT(0)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 
 	if _, err := d.DB.Exec(sql); err != nil {
 		return err
 	}
 
-	_, err := d.DB.Exec(`INSERT INTO "server" ("name", "code") VALUES ('Default Server', 478)`)
+	_, err := d.DB.Exec(`INSERT INTO "server" ("name", "code", "manager") VALUES
+							('Default Server', 478, 0),
+							('manager', 125, 1)`)
 	return err
 }
 
@@ -225,7 +282,14 @@ func (m *database) createTableTable(d *common.DatabaseAccessor) error {
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"table_num" INT NOT NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
-	_, err := d.DB.Exec(sql)
+
+	if _, err := d.DB.Exec(sql); err != nil {
+		return err
+	}
+
+	_, err := d.DB.Exec(`INSERT INTO "table" ("table_num") VALUES
+							(1),
+							(2)`)
 	return err
 }
 
