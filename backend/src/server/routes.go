@@ -11,7 +11,6 @@ import (
 	log "github.com/lfkeitel/verbose/v5"
 
 	"koala.pos/src/common"
-	"koala.pos/src/controllers"
 	"koala.pos/src/graphql"
 	"koala.pos/src/models/stores"
 	mid "koala.pos/src/server/middleware"
@@ -25,10 +24,6 @@ func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Hand
 	r.Handler("POST", "/query", midStack(e, stores, handler.GraphQL(
 		graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
 	)))
-
-	r.Handler("GET", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
-	r.Handler("POST", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
-	r.Handler("DELETE", "/api/*a", midStack(e, stores, apiRouter(e, stores)))
 
 	if e.IsDev() {
 		r.Handler("GET", "/debug/*a", midStack(e, stores, debugRouter(e)))
@@ -75,15 +70,6 @@ func heapStats(w http.ResponseWriter, r *http.Request) {
 		m.HeapIdle,
 		m.HeapReleased,
 	)
-}
-
-func apiRouter(e *common.Environment, stores *stores.StoreCollection) http.Handler {
-	r := httprouter.New()
-
-	productAPIController := controllers.NewProductController(e, stores.Product)
-	r.Handle("GET", "/api/product/:id", productAPIController.GetHandler)
-
-	return mid.CheckAuthAPI(r)
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
