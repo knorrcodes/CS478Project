@@ -20,14 +20,14 @@ var Default = BuildInDocker
 // the Docker container building the project.
 func Build() error {
 	ldflags := map[string]string{
-		"main.version":   getVersionString(),
+		"main.version":   lookupEnv("BUILD_VERSION", getVersionString()),
+		"main.builder":   lookupEnv("BUILDER", getBuilderString()),
 		"main.buildTime": time.Now().UTC().Format(time.RFC3339),
-		"main.builder":   getBuilderString(),
-		"main.goversion": runtime.Version()[2:],
+		"main.goversion": runtime.Version()[2:], // Strip off "go"
 	}
 
 	env := map[string]string{
-		"CGO_ENABLED": "0",
+		"CGO_ENABLED": lookupEnv("CGO_ENABLED", "0"),
 	}
 
 	_, err := sh.Exec(env, os.Stdout, os.Stderr,
@@ -46,31 +46,54 @@ func Generate() error {
 	return sh.RunV("go", "generate", "./...")
 }
 
-// Build the project inside a Docker container
+// Build the project inside a Docker container using caches from the host
 func BuildInDocker() error {
+	return buildInDocker(false)
+}
+
+// Build the project inside a Docker container with a clean environment
+func BuildInDockerClean() error {
+	return buildInDocker(true)
+}
+
+func buildInDocker(clean bool) error {
 	pwd, _ := os.Getwd()
-	gopath, _ := os.LookupEnv("GOPATH")
+	gopath := lookupEnv("GOPATH", "")
+	home, _ := os.UserHomeDir()
 	if gopath == "" {
-		home, _ := os.UserHomeDir()
+		// Default Go path used by go toolchain
 		gopath = filepath.Join(home, "go")
 	}
 
 	env := map[string]string{
-		"BUILDTIME": time.Now().UTC().Format(time.RFC3339),
-		"BUILDER":   getBuilderString(),
+		"BUILDER":       getBuilderString(),
+		"BUILD_VERSION": getVersionString(),
 	}
 
-	_, err := sh.Exec(env, os.Stdout, os.Stderr,
-		"docker", "run", "--rm",
-		"-e", "GOPATH=/go",
-		"-e", "CGO_ENABLED=0",
-		"-e", "BUILDTIME",
-		"-e", "BUILDER",
-		"-v", fmt.Sprintf("%s/..:/usr/src/koala-pos", pwd),
-		"-v", fmt.Sprintf("%s/pkg/mod:/go/pkg/mod", gopath),
-		"-w", "/usr/src/koala-pos/backend",
+	args := []string{
+		"run", "--rm", // Remove container after execution
+		"-e", "CGO_ENABLED=0", // Ensure cgo is disabled
+		"-e", "BUILDER", // Pass in builder
+		"-e", "BUILD_VERSION", // Pass in build version
+		"-w", "/usr/src/koala-pos", // Set working directory
+		"-v", fmt.Sprintf("%s:/usr/src/koala-pos", pwd), // Mount code
+	}
+
+	if !clean {
+		args = append(args,
+			// Mount package cache
+			"-v", fmt.Sprintf("%s/pkg/mod:/go/pkg/mod", gopath),
+			// Mount build cache
+			"-v", fmt.Sprintf("%s/.cache/go-build:/root/.cache/go-build", home),
+		)
+	}
+
+	args = append(args,
+		// Image and command to run
 		"golang:1.13-alpine", "go", "run", "mage.go", "build",
 	)
+
+	_, err := sh.Exec(env, os.Stdout, os.Stderr, "docker", args...)
 	return err
 }
 
@@ -91,6 +114,21 @@ func RunDevLogs() error {
 func RestartDev() error {
 	os.Chdir("docker")
 	return sh.RunV("docker-compose", "restart", "pos-backend")
+}
+
+// Rebuild and restart the backend server with logs
+func RestartDevLogs() error {
+	// Rebuild application
+	mg.Deps(BuildInDocker)
+
+	// Restart container
+	os.Chdir("docker")
+	if err := sh.RunV("docker-compose", "restart", "pos-backend"); err != nil {
+		return err
+	}
+
+	// Start log stream
+	return sh.RunV("docker-compose", "logs", "-f")
 }
 
 // Stop the backend server and database
@@ -143,14 +181,37 @@ func formatLDFlags(flags map[string]string) string {
 	return s.String()
 }
 
+// Generate a version string using git tags or commit hash.
 func getVersionString() string {
 	out, _ := sh.Output("git", "describe", "--tags", "--always", "--dirty")
+	if out == "" {
+		return "Unknow version"
+	}
 	return out
 }
 
+// Generate builder ID using name and email from git config.
 func getBuilderString() string {
 	gitConfigCmd := sh.OutCmd("git", "config")
+
 	name, _ := gitConfigCmd("user.name")
+	if name == "" {
+		name = "Unknown Builder"
+	}
+
 	email, _ := gitConfigCmd("user.email")
+
+	if email == "" {
+		return fmt.Sprintf("%s", name)
+	}
 	return fmt.Sprintf("%s <%s>", name, email)
+}
+
+// lookupEnv checks the environment for key and returns its value if
+// it exists otherwise def is returned.
+func lookupEnv(key string, def string) string {
+	if val, exists := os.LookupEnv(key); exists {
+		return val
+	}
+	return def
 }
