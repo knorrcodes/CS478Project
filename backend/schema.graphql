@@ -22,7 +22,9 @@ type Server{
 }
 
 type Query {
+    product(id: ID!): Product
     products: [Product!]!
+    category(id: ID!): Category
     categories: [Category!]!
     server(code: Int!): Server
 }
