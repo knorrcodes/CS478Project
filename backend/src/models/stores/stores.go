@@ -10,6 +10,7 @@ import (
 type StoreCollection struct {
 	Product  ProductStore
 	Category CategoryStore
+	Server   ServerStore
 }
 
 // Session values keys

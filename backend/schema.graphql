@@ -14,9 +14,17 @@ type Category {
     name: String!
 }
 
+type Server{
+    id: ID!
+    name: String!
+    code: Int!
+    manager: Boolean!
+}
+
 type Query {
     products: [Product!]!
     categories: [Category!]!
+    server(code: Int!): Server
 }
 
 input InputID {

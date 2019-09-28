@@ -10,14 +10,20 @@ import (
 	"koala.pos/src/models/stores"
 )
 
+// Resolver is the root GraphQL resolver
 type Resolver struct{}
 
+// Product is the product resolver
 func (r *Resolver) Product() ProductResolver {
 	return &productResolver{r}
 }
+
+// Query is the query resolver
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
+
+// Mutation is the mutation resolver
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
@@ -34,6 +40,15 @@ func (r *productResolver) Category(ctx context.Context, obj *models.Product) (*m
 }
 
 type queryResolver struct{ *Resolver }
+
+func (r *queryResolver) Server(ctx context.Context, code int) (*models.Server, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Server.GetByCode(code)
+}
 
 func (r *queryResolver) Products(ctx context.Context) ([]*models.Product, error) {
 	storeCollection := stores.GetStoreCollectionFromContext(ctx)

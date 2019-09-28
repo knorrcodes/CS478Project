@@ -72,6 +72,7 @@ func main() {
 	appStores := &stores.StoreCollection{
 		Product:  stores.NewProductStore(e),
 		Category: stores.NewCategoryStore(e),
+		Server:   stores.NewServerStore(e),
 	}
 
 	// Start web server
