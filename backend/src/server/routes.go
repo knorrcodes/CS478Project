@@ -31,7 +31,7 @@ func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Hand
 
 	if e.IsDev() {
 		r.Handler("GET", "/debug/*a", midStack(e, stores, debugRouter(e)))
-		log.Debug("Profiling enabled")
+		log.Info("Profiling enabled")
 	}
 
 	h := mid.Logging(r, e) // Logging
