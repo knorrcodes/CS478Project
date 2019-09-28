@@ -20,8 +20,12 @@ func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Hand
 	r := httprouter.New()
 	r.NotFound = http.HandlerFunc(notFoundHandler)
 
-	r.HandlerFunc("GET", "/", handler.Playground("GraphQL playground", "/query"))
-	r.Handler("POST", "/query", midStack(e, stores, handler.GraphQL(
+	// GraphQL routes
+	if e.IsDev() {
+		r.HandlerFunc("GET", "/", handler.Playground("GraphQL playground", "/graphql"))
+		log.Info("GraphQL playground enabled")
+	}
+	r.Handler("POST", "/graphql", midStack(e, stores, handler.GraphQL(
 		graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
 	)))
 
