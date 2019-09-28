@@ -8,7 +8,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/lfkeitel/verbose/v5 v5.0.0-beta1
+	github.com/lfkeitel/verbose/v5 v5.0.0-beta2
 	github.com/magefile/mage v1.9.0
 	github.com/vektah/gqlparser v1.1.2
 	google.golang.org/appengine v1.6.3 // indirect

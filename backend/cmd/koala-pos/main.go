@@ -81,14 +81,17 @@ func main() {
 func setupEnvironment() *common.Environment {
 	var err error
 	e := common.NewEnvironment(common.EnvProd)
-	if dev {
-		e.Env = common.EnvDev
-	}
 
 	e.Config, err = common.NewConfig(configFile)
 	if err != nil {
 		fmt.Printf("Error loading configuration: %s\n", err)
 		os.Exit(1)
+	}
+	common.SetupLogging(e.Config)
+
+	if dev {
+		log.Warning("Development mode ENABLED")
+		e.Env = common.EnvDev
 	}
 
 	log.WithField("config_file", configFile).Debug("Configuration loaded")

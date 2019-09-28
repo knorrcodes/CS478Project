@@ -20,19 +20,33 @@ var logLevels = map[string]log.LogLevel{
 
 // SetupLogging creates a standard logger with console and file logging.
 func SetupLogging(c *Config) {
-	setupFileLogging(c.Logging.Level, c.Logging.Path)
+	minLevel := log.LogLevelInfo
+	if logLevel, ok := logLevels[c.Logging.Level]; ok {
+		minLevel = logLevel
+	}
+
+	log.ClearTransports()
+	setupConsoleLogging(minLevel)
+	setupFileLogging(minLevel, c.Logging.Path)
 }
 
-func setupFileLogging(level, path string) {
+func setupConsoleLogging(level log.LogLevel) {
+	tt := log.NewTextTransport()
+	tt.SetMinLevel(level)
+	log.AddTransport(tt)
+}
+
+func setupFileLogging(level log.LogLevel, path string) {
 	if path == "" {
 		return
 	}
 
-	fh, err := log.NewFileTransport(path)
+	ft, err := log.NewFileTransport(path)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fh.Formatter = log.NewJSONFormatter()
-	log.AddTransport(fh)
+	ft.SetMinLevel(level)
+	ft.Formatter = log.NewJSONFormatter()
+	log.AddTransport(ft)
 }

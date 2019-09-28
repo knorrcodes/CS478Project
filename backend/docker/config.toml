@@ -2,6 +2,7 @@
 Enabled = true
 EnableHTTP = true
 Level = "debug"
+Path = "logs/server-logs.txt"
 
 [Database]
 Address = "pos-database"
