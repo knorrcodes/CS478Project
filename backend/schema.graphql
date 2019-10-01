@@ -21,12 +21,20 @@ type Server{
     manager: Boolean!
 }
 
+type Table {
+    id: ID!
+    num: Int!
+    # orders: [Order!]!
+}
+
 type Query {
     product(id: ID!): Product
     products: [Product!]!
     category(id: ID!): Category
     categories: [Category!]!
     server(code: Int!): Server
+    table(id: ID!): Table
+    tables: [Table!]!
 }
 
 input InputID {
@@ -47,7 +55,12 @@ input NewProduct {
     num_of_sides: Int
 }
 
+input NewTable {
+    num: Int!
+}
+
 type Mutation {
-    createProduct(input: NewProduct!): Product!
-    createCategory(input: NewCategory!): Category!
+    createProduct(p: NewProduct!): Product!
+    createCategory(c: NewCategory!): Category!
+    createTable(t: NewTable!): Table!
 }

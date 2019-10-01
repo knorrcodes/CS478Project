@@ -77,3 +77,27 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input NewCategory
 
 	return cat, nil
 }
+
+func (r *mutationResolver) CreateTable(ctx context.Context, input NewTable) (*models.Table, error) {
+	server := auth.GetServerFromContext(ctx)
+	if server == nil {
+		return nil, errors.New("Failed to check permissions")
+	}
+
+	if !server.Manager {
+		return nil, errors.New("insufficient privilages")
+	}
+
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	table := models.NewTable(storeCollection.Table)
+	table.Num = input.Num
+	if err := table.Save(); err != nil {
+		return nil, err
+	}
+
+	return table, nil
+}

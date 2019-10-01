@@ -19,3 +19,7 @@ type NewProduct struct {
 	Wscost     int      `json:"wscost"`
 	NumOfSides *int     `json:"num_of_sides"`
 }
+
+type NewTable struct {
+	Num int `json:"num"`
+}

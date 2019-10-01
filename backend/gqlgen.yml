@@ -22,12 +22,14 @@ resolver:
 autobind: []
 
 models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.IntID
   Product:
     model: koala.pos/src/models.Product
   Category:
     model: koala.pos/src/models.Category
-  ID:
-    model:
-      - github.com/99designs/gqlgen/graphql.IntID
   Server:
     model: koala.pos/src/models.Server
+  Table:
+    model: koala.pos/src/models.Table

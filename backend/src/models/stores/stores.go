@@ -11,6 +11,7 @@ type StoreCollection struct {
 	Product  ProductStore
 	Category CategoryStore
 	Server   ServerStore
+	Table	 TableStore
 }
 
 // GetStoreCollectionFromContext retrieves the StoreCollection from the current request.

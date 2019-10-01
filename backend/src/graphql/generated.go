@@ -50,8 +50,9 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory func(childComplexity int, input NewCategory) int
-		CreateProduct  func(childComplexity int, input NewProduct) int
+		CreateCategory func(childComplexity int, c NewCategory) int
+		CreateProduct  func(childComplexity int, p NewProduct) int
+		CreateTable    func(childComplexity int, c NewTable) int
 	}
 
 	Product struct {
@@ -71,6 +72,8 @@ type ComplexityRoot struct {
 		Product    func(childComplexity int, id int) int
 		Products   func(childComplexity int) int
 		Server     func(childComplexity int, code int) int
+		Table      func(childComplexity int, id int) int
+		Tables     func(childComplexity int) int
 	}
 
 	Server struct {
@@ -79,11 +82,17 @@ type ComplexityRoot struct {
 		Manager func(childComplexity int) int
 		Name    func(childComplexity int) int
 	}
+
+	Table struct {
+		ID  func(childComplexity int) int
+		Num func(childComplexity int) int
+	}
 }
 
 type MutationResolver interface {
-	CreateProduct(ctx context.Context, input NewProduct) (*models.Product, error)
-	CreateCategory(ctx context.Context, input NewCategory) (*models.Category, error)
+	CreateProduct(ctx context.Context, p NewProduct) (*models.Product, error)
+	CreateCategory(ctx context.Context, c NewCategory) (*models.Category, error)
+	CreateTable(ctx context.Context, c NewTable) (*models.Table, error)
 }
 type ProductResolver interface {
 	Category(ctx context.Context, obj *models.Product) (*models.Category, error)
@@ -91,9 +100,11 @@ type ProductResolver interface {
 type QueryResolver interface {
 	Product(ctx context.Context, id int) (*models.Product, error)
 	Products(ctx context.Context) ([]*models.Product, error)
-	Categories(ctx context.Context) ([]*models.Category, error)
 	Category(ctx context.Context, id int) (*models.Category, error)
+	Categories(ctx context.Context) ([]*models.Category, error)
 	Server(ctx context.Context, code int) (*models.Server, error)
+	Table(ctx context.Context, id int) (*models.Table, error)
+	Tables(ctx context.Context) ([]*models.Table, error)
 }
 
 type executableSchema struct {
@@ -135,7 +146,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCategory(childComplexity, args["input"].(NewCategory)), true
+		return e.complexity.Mutation.CreateCategory(childComplexity, args["c"].(NewCategory)), true
 
 	case "Mutation.createProduct":
 		if e.complexity.Mutation.CreateProduct == nil {
@@ -147,7 +158,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateProduct(childComplexity, args["input"].(NewProduct)), true
+		return e.complexity.Mutation.CreateProduct(childComplexity, args["p"].(NewProduct)), true
+
+	case "Mutation.createTable":
+		if e.complexity.Mutation.CreateTable == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTable_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTable(childComplexity, args["c"].(NewTable)), true
 
 	case "Product.category":
 		if e.complexity.Product.Category == nil {
@@ -255,6 +278,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Server(childComplexity, args["code"].(int)), true
 
+	case "Query.table":
+		if e.complexity.Query.Table == nil {
+			break
+		}
+
+		args, err := ec.field_Query_table_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Table(childComplexity, args["id"].(int)), true
+
+	case "Query.tables":
+		if e.complexity.Query.Tables == nil {
+			break
+		}
+
+		return e.complexity.Query.Tables(childComplexity), true
+
 	case "Server.code":
 		if e.complexity.Server.Code == nil {
 			break
@@ -282,6 +324,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Server.Name(childComplexity), true
+
+	case "Table.id":
+		if e.complexity.Table.ID == nil {
+			break
+		}
+
+		return e.complexity.Table.ID(childComplexity), true
+
+	case "Table.num":
+		if e.complexity.Table.Num == nil {
+			break
+		}
+
+		return e.complexity.Table.Num(childComplexity), true
 
 	}
 	return 0, false
@@ -368,12 +424,19 @@ type Server{
     manager: Boolean!
 }
 
+type Table {
+    id: ID!
+    num: Int!
+}
+
 type Query {
     product(id: ID!): Product
     products: [Product!]!
-    categories: [Category!]!
     category(id: ID!): Category
+    categories: [Category!]!
     server(code: Int!): Server
+    table(id: ID!): Table
+    tables: [Table!]!
 }
 
 input InputID {
@@ -394,9 +457,14 @@ input NewProduct {
     num_of_sides: Int
 }
 
+input NewTable {
+    num: Int!
+}
+
 type Mutation {
-    createProduct(input: NewProduct!): Product!
-    createCategory(input: NewCategory!): Category!
+    createProduct(p: NewProduct!): Product!
+    createCategory(c: NewCategory!): Category!
+    createTable(c: NewTable!): Table!
 }
 `},
 )
@@ -409,13 +477,13 @@ func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Conte
 	var err error
 	args := map[string]interface{}{}
 	var arg0 NewCategory
-	if tmp, ok := rawArgs["input"]; ok {
+	if tmp, ok := rawArgs["c"]; ok {
 		arg0, err = ec.unmarshalNNewCategory2koalaᚗposᚋsrcᚋgraphqlᚐNewCategory(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["c"] = arg0
 	return args, nil
 }
 
@@ -423,13 +491,27 @@ func (ec *executionContext) field_Mutation_createProduct_args(ctx context.Contex
 	var err error
 	args := map[string]interface{}{}
 	var arg0 NewProduct
-	if tmp, ok := rawArgs["input"]; ok {
+	if tmp, ok := rawArgs["p"]; ok {
 		arg0, err = ec.unmarshalNNewProduct2koalaᚗposᚋsrcᚋgraphqlᚐNewProduct(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["p"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTable_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 NewTable
+	if tmp, ok := rawArgs["c"]; ok {
+		arg0, err = ec.unmarshalNNewTable2koalaᚗposᚋsrcᚋgraphqlᚐNewTable(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["c"] = arg0
 	return args, nil
 }
 
@@ -486,6 +568,20 @@ func (ec *executionContext) field_Query_server_args(ctx context.Context, rawArgs
 		}
 	}
 	args["code"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_table_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -625,7 +721,7 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(NewProduct))
+		return ec.resolvers.Mutation().CreateProduct(rctx, args["p"].(NewProduct))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -669,7 +765,7 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCategory(rctx, args["input"].(NewCategory))
+		return ec.resolvers.Mutation().CreateCategory(rctx, args["c"].(NewCategory))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -685,6 +781,50 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNCategory2ᚖkoalaᚗposᚋsrcᚋmodelsᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createTable(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createTable_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTable(rctx, args["c"].(NewTable))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Table)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTable2ᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Product_id(ctx context.Context, field graphql.CollectedField, obj *models.Product) (ret graphql.Marshaler) {
@@ -1058,43 +1198,6 @@ func (ec *executionContext) _Query_products(ctx context.Context, field graphql.C
 	return ec.marshalNProduct2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐProduct(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_categories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Categories(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Category)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCategory2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐCategory(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_category(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1136,6 +1239,43 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 	return ec.marshalOCategory2ᚖkoalaᚗposᚋsrcᚋmodelsᚐCategory(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_categories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Categories(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Category)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCategory2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐCategory(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_server(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1175,6 +1315,84 @@ func (ec *executionContext) _Query_server(ctx context.Context, field graphql.Col
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOServer2ᚖkoalaᚗposᚋsrcᚋmodelsᚐServer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_table(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_table_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Table(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Table)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTable2ᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_tables(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Tables(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Table)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTable2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1398,6 +1616,80 @@ func (ec *executionContext) _Server_manager(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Table_id(ctx context.Context, field graphql.CollectedField, obj *models.Table) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Table",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Table_num(ctx context.Context, field graphql.CollectedField, obj *models.Table) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Table",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Num, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2641,6 +2933,24 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewTable(ctx context.Context, obj interface{}) (NewTable, error) {
+	var it NewTable
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "num":
+			var err error
+			it.Num, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2703,6 +3013,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createCategory":
 			out.Values[i] = ec._Mutation_createCategory(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createTable":
+			out.Values[i] = ec._Mutation_createTable(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2825,6 +3140,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "category":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_category(ctx, field)
+				return res
+			})
 		case "categories":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2839,17 +3165,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "category":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_category(ctx, field)
-				return res
-			})
 		case "server":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2859,6 +3174,31 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_server(ctx, field)
+				return res
+			})
+		case "table":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_table(ctx, field)
+				return res
+			})
+		case "tables":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tables(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -2904,6 +3244,38 @@ func (ec *executionContext) _Server(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "manager":
 			out.Values[i] = ec._Server_manager(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var tableImplementors = []string{"Table"}
+
+func (ec *executionContext) _Table(ctx context.Context, sel ast.SelectionSet, obj *models.Table) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, tableImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Table")
+		case "id":
+			out.Values[i] = ec._Table_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "num":
+			out.Values[i] = ec._Table_num(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3276,6 +3648,10 @@ func (ec *executionContext) unmarshalNNewProduct2koalaᚗposᚋsrcᚋgraphqlᚐN
 	return ec.unmarshalInputNewProduct(ctx, v)
 }
 
+func (ec *executionContext) unmarshalNNewTable2koalaᚗposᚋsrcᚋgraphqlᚐNewTable(ctx context.Context, v interface{}) (NewTable, error) {
+	return ec.unmarshalInputNewTable(ctx, v)
+}
+
 func (ec *executionContext) marshalNProduct2koalaᚗposᚋsrcᚋmodelsᚐProduct(ctx context.Context, sel ast.SelectionSet, v models.Product) graphql.Marshaler {
 	return ec._Product(ctx, sel, &v)
 }
@@ -3339,6 +3715,57 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTable2koalaᚗposᚋsrcᚋmodelsᚐTable(ctx context.Context, sel ast.SelectionSet, v models.Table) graphql.Marshaler {
+	return ec._Table(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTable2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx context.Context, sel ast.SelectionSet, v []*models.Table) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTable2ᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNTable2ᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx context.Context, sel ast.SelectionSet, v *models.Table) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Table(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3667,6 +4094,17 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOTable2koalaᚗposᚋsrcᚋmodelsᚐTable(ctx context.Context, sel ast.SelectionSet, v models.Table) graphql.Marshaler {
+	return ec._Table(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOTable2ᚖkoalaᚗposᚋsrcᚋmodelsᚐTable(ctx context.Context, sel ast.SelectionSet, v *models.Table) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Table(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
