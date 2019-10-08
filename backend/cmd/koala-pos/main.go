@@ -74,6 +74,8 @@ func main() {
 		Category: stores.NewCategoryStore(e),
 		Server:   stores.NewServerStore(e),
 		Table:    stores.NewTableStore(e),
+		CustCode: stores.NewCustCodeStore(e),
+		Order:    stores.NewOrderStore(e),
 	}
 
 	// Start web server

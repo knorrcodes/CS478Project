@@ -2,12 +2,19 @@
 
 package graphql
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type InputID struct {
 	ID int `json:"id"`
 }
 
-type NewCategory struct {
-	Name string `json:"name"`
+type NewOrder struct {
+	Table  *InputID `json:"table"`
+	Server *InputID `json:"server"`
 }
 
 type NewProduct struct {
@@ -20,6 +27,45 @@ type NewProduct struct {
 	NumOfSides *int     `json:"num_of_sides"`
 }
 
-type NewTable struct {
-	Num int `json:"num"`
+type OrderStatus string
+
+const (
+	OrderStatusAny    OrderStatus = "ANY"
+	OrderStatusOpened OrderStatus = "OPENED"
+	OrderStatusClosed OrderStatus = "CLOSED"
+)
+
+var AllOrderStatus = []OrderStatus{
+	OrderStatusAny,
+	OrderStatusOpened,
+	OrderStatusClosed,
+}
+
+func (e OrderStatus) IsValid() bool {
+	switch e {
+	case OrderStatusAny, OrderStatusOpened, OrderStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e OrderStatus) String() string {
+	return string(e)
+}
+
+func (e *OrderStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderStatus", str)
+	}
+	return nil
+}
+
+func (e OrderStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

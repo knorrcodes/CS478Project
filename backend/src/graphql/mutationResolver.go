@@ -5,8 +5,10 @@ package graphql
 import (
 	"context"
 	"errors"
+	"time"
 
 	"koala.pos/src/auth"
+	"koala.pos/src/common"
 	"koala.pos/src/models"
 	"koala.pos/src/models/stores"
 )
@@ -54,7 +56,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input NewProduct) 
 	return product, nil
 }
 
-func (r *mutationResolver) CreateCategory(ctx context.Context, input NewCategory) (*models.Category, error) {
+func (r *mutationResolver) CreateCategory(ctx context.Context, name string) (*models.Category, error) {
 	server := auth.GetServerFromContext(ctx)
 	if server == nil {
 		return nil, errors.New("Failed to check permissions")
@@ -70,7 +72,7 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input NewCategory
 	}
 
 	cat := models.NewCategory(storeCollection.Category)
-	cat.Name = input.Name
+	cat.Name = name
 	if err := cat.Save(); err != nil {
 		return nil, err
 	}
@@ -78,7 +80,7 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input NewCategory
 	return cat, nil
 }
 
-func (r *mutationResolver) CreateTable(ctx context.Context, input NewTable) (*models.Table, error) {
+func (r *mutationResolver) CreateTable(ctx context.Context, num int) (*models.Table, error) {
 	server := auth.GetServerFromContext(ctx)
 	if server == nil {
 		return nil, errors.New("Failed to check permissions")
@@ -94,10 +96,73 @@ func (r *mutationResolver) CreateTable(ctx context.Context, input NewTable) (*mo
 	}
 
 	table := models.NewTable(storeCollection.Table)
-	table.Num = input.Num
+	table.Num = num
 	if err := table.Save(); err != nil {
 		return nil, err
 	}
 
 	return table, nil
+}
+
+func (r *mutationResolver) CreateCustCode(ctx context.Context, orderID int) (*models.CustCode, error) {
+	// Any server can create a customer code
+
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	code := models.NewCustCode(storeCollection.CustCode)
+	code.StartTime = time.Now()
+	code.EndTime = code.StartTime.Add(2 * time.Hour)
+	code.Code = common.GenerateOneTimeCode()
+	code.OrderID = orderID
+
+	if err := code.Save(); err != nil {
+		return nil, err
+	}
+
+	return code, nil
+}
+
+func (r *mutationResolver) StartOrder(ctx context.Context, o NewOrder) (*models.Order, error) {
+	// Any server can create a customer code
+
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	order := models.NewOrder(storeCollection.Order)
+	order.StartTime = time.Now()
+	order.EndTime = time.Unix(0, 0)
+	order.TableID = o.Table.ID
+	order.ServerID = o.Server.ID
+
+	if err := order.Save(); err != nil {
+		return nil, err
+	}
+
+	return order, nil
+}
+
+func (r *mutationResolver) CloseOrder(ctx context.Context, id int) (*models.Order, error) {
+	// Any server can create a customer code
+
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	order, err := storeCollection.Order.GetOrderByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	order.EndTime = time.Now()
+	if err := order.Save(); err != nil {
+		return nil, err
+	}
+
+	return order, nil
 }

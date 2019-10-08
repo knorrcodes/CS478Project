@@ -60,6 +60,7 @@ func (m *database) connect(d *common.DatabaseAccessor, c *common.Config) error {
 	mc.Net = "tcp"
 	mc.Addr = fmt.Sprintf("%s:%d", c.Database.Address, c.Database.Port)
 	mc.DBName = c.Database.Name
+	mc.ParseTime = true
 
 	var err error
 	d.DB, err = sql.Open("mysql", mc.FormatDSN())
@@ -267,8 +268,8 @@ func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 func (m *database) createOrderTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "order" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-		"starttime" DATETIME NOT NULL,
-		"endtime" DATETIME NOT NULL,
+		"starttime" INT UNSIGNED NOT NULL DEFAULT (0),
+		"endtime" INT UNSIGNED NOT NULL DEFAULT (0),
 		"table_id" INT NOT NULL,
 		"server_id" INT NOT NULL,
 		INDEX ("table_id", "server_id")
@@ -296,8 +297,8 @@ func (m *database) createTableTable(d *common.DatabaseAccessor) error {
 func (m *database) createCustCodeTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "cust_code" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-		"starttime" DATETIME NOT NULL,
-		"endtime" DATETIME NOT NULL,
+		"starttime" INT UNSIGNED NOT NULL DEFAULT (0),
+		"endtime" INT UNSIGNED NOT NULL DEFAULT (0),
 		"code" TINYTEXT NOT NULL,
 		"order_id" INT NOT NULL,
 		INDEX ("order_id")

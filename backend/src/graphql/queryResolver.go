@@ -74,3 +74,74 @@ func (r *queryResolver) Tables(ctx context.Context) ([]*models.Table, error) {
 
 	return storeCollection.Table.GetTables()
 }
+
+func (r *queryResolver) Custcode(ctx context.Context, id *int, code *string) (*models.CustCode, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	if id != nil && *id > 0 {
+		return storeCollection.CustCode.GetCustCodeByID(*id)
+	}
+
+	if code != nil && *code != "" {
+		return storeCollection.CustCode.GetCustCodeByCode(*code)
+	}
+
+	return nil, nil
+}
+
+func (r *queryResolver) Custcodes(ctx context.Context) ([]*models.CustCode, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.CustCode.GetCustCodes()
+}
+
+func (r *queryResolver) Orders(ctx context.Context, server *int, status *OrderStatus) ([]*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	if server != nil && *server > 0 {
+		return r.ordersByServer(storeCollection.Order, *server, status)
+	}
+
+	return storeCollection.Order.GetOrders(graphQLOrderStatusToStore(status))
+}
+
+func (r *queryResolver) ordersByServer(s stores.OrderStore, server int, status *OrderStatus) ([]*models.Order, error) {
+	return s.GetOrdersByServer(server, graphQLOrderStatusToStore(status))
+}
+
+func graphQLOrderStatusToStore(status *OrderStatus) stores.OrderStatus {
+	switch *status {
+	case OrderStatusOpened:
+		return stores.OrderStatusOpened
+	case OrderStatusClosed:
+		return stores.OrderStatusClosed
+	default:
+		return stores.OrderStatusAny
+	}
+}
+
+func (r *queryResolver) Order(ctx context.Context, id *int, table *int) (*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	if id != nil && *id > 0 {
+		return storeCollection.Order.GetOrderByID(*id)
+	}
+
+	if table != nil && *table > 0 {
+		return storeCollection.Order.GetLatestOrderByTable(*table)
+	}
+
+	return nil, nil
+}

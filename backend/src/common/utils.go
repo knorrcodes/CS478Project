@@ -1,7 +1,9 @@
 package common
 
 import (
+	"bytes"
 	"errors"
+	"math/rand"
 	"net"
 	"os"
 	"strconv"
@@ -80,4 +82,19 @@ func ParseTime(time string) (int64, error) {
 	}
 
 	return int64((hours * secondsInHour) + (minutes * secondsInMinute)), nil
+}
+
+const (
+	codeChars  = "ABCDEFGHJKLMNPQRTUVWXYZ0123456789"
+	codeLength = 6
+)
+
+// GenerateOneTimeCode will create a 6 character code.
+// Possibly confusing letters have been removed. In particular, the letters I, S, and O.
+func GenerateOneTimeCode() string {
+	code := bytes.Buffer{}
+	for i := 0; i < codeLength; i++ {
+		code.WriteByte(codeChars[rand.Intn(len(codeChars))])
+	}
+	return code.String()
 }

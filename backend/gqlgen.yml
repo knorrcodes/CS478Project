@@ -23,8 +23,7 @@ autobind: []
 
 models:
   ID:
-    model:
-      - github.com/99designs/gqlgen/graphql.IntID
+    model: github.com/99designs/gqlgen/graphql.IntID
   Product:
     model: koala.pos/src/models.Product
   Category:
@@ -33,3 +32,7 @@ models:
     model: koala.pos/src/models.Server
   Table:
     model: koala.pos/src/models.Table
+  CustCode:
+    model: koala.pos/src/models.CustCode
+  Order:
+    model: koala.pos/src/models.Order
