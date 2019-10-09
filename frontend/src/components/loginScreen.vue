@@ -18,12 +18,12 @@
             id="serverCodeButton"
             @click="serverCodeCheck"
           >Enter</button>
-          <br />
-          <br />
-          <button type="button" class="btn btn-primary" @click="getAllTestData">test data</button>
         </form>
         <div v-if="clicked">
           <p>{{apiData}}</p>
+        </div>
+        <div>
+          <button v-if="mainmenu">mainmenu</button>
         </div>
       </div>
     </div>
@@ -33,12 +33,14 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import ApiClass from "../api";
+import mainMenu from "./mainMenu.vue";
 
 @Component
 export default class loginScreen extends Vue {
   private serverCode: Number = 0;
   private apiData: String = "";
   clicked: boolean = false;
+  private mainMenu = true;
 
   private serverCodeCheck() {
     if (this.serverCode == 478) {
