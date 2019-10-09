@@ -29,6 +29,7 @@ type Order {
     end_time: Time
     table: Table!
     server: Server!
+    items: [OrderItem!]!
 }
 
 type Table {
@@ -42,6 +43,12 @@ type CustCode {
     start_time: Time!
     end_time: Time
     code: String!
+    order: Order!
+}
+
+type OrderItem {
+    id: ID!
+    products: [Product!]!
     order: Order!
 }
 
@@ -70,23 +77,19 @@ type Query {
     order(id: ID = 0, table: ID = 0): Order
 }
 
-input InputID {
-    id: ID!
-}
-
 input NewProduct {
     name: String!
     desc: String
     picture: String
     price: Int!
-    category: InputID!
+    category: ID!
     wscost: Int!
     num_of_sides: Int
 }
 
 input NewOrder {
-    table: InputID!
-    server: InputID!
+    table: ID!
+    server: ID!
 }
 
 type Mutation {
@@ -97,4 +100,5 @@ type Mutation {
 
     startOrder(o: NewOrder!): Order!
     closeOrder(id: ID!): Order!
+    addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
 }

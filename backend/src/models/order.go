@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // OrderStore interface type
 type OrderStore interface {
@@ -28,6 +30,11 @@ func NewOrder(cs OrderStore) *Order {
 // IsNew check if Order object is new
 func (c *Order) IsNew() bool {
 	return c.ID == 0
+}
+
+// IsOpen checks if Order object is currently open
+func (c *Order) IsOpen() bool {
+	return c.EndTime.Unix() == 0
 }
 
 // Save is the function to save a Order object

@@ -70,12 +70,13 @@ func main() {
 	}
 
 	appStores := &stores.StoreCollection{
-		Product:  stores.NewProductStore(e),
-		Category: stores.NewCategoryStore(e),
-		Server:   stores.NewServerStore(e),
-		Table:    stores.NewTableStore(e),
-		CustCode: stores.NewCustCodeStore(e),
-		Order:    stores.NewOrderStore(e),
+		Product:   stores.NewProductStore(e),
+		Category:  stores.NewCategoryStore(e),
+		Server:    stores.NewServerStore(e),
+		Table:     stores.NewTableStore(e),
+		CustCode:  stores.NewCustCodeStore(e),
+		Order:     stores.NewOrderStore(e),
+		OrderItem: stores.NewOrderItemStore(e),
 	}
 
 	// Start web server

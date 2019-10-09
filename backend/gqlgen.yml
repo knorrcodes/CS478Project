@@ -36,3 +36,5 @@ models:
     model: koala.pos/src/models.CustCode
   Order:
     model: koala.pos/src/models.Order
+  OrderItem:
+    model: koala.pos/src/models.OrderItem

@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input NewProduct) 
 	// Required fields
 	product.Name = input.Name
 	product.Price = input.Price
-	product.Category = input.Category.ID
+	product.Category = input.Category
 	product.WSCost = input.Wscost
 
 	// Optional fields
@@ -136,8 +136,8 @@ func (r *mutationResolver) StartOrder(ctx context.Context, o NewOrder) (*models.
 	order := models.NewOrder(storeCollection.Order)
 	order.StartTime = time.Now()
 	order.EndTime = time.Unix(0, 0)
-	order.TableID = o.Table.ID
-	order.ServerID = o.Server.ID
+	order.TableID = o.Table
+	order.ServerID = o.Server
 
 	if err := order.Save(); err != nil {
 		return nil, err
@@ -165,4 +165,31 @@ func (r *mutationResolver) CloseOrder(ctx context.Context, id int) (*models.Orde
 	}
 
 	return order, nil
+}
+
+func (r *mutationResolver) AddItemToOrder(ctx context.Context, orderID int, products []int) (*models.OrderItem, error) {
+	// Any server can update an order
+
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	order, err := storeCollection.Order.GetOrderByID(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !order.IsOpen() {
+		return nil, errors.New("cannot add items to a closed order")
+	}
+
+	orderItem := models.NewOrderItem(storeCollection.OrderItem)
+	orderItem.OrderID = orderID
+	orderItem.Products = products
+	if err := orderItem.Save(); err != nil {
+		return nil, err
+	}
+
+	return orderItem, nil
 }

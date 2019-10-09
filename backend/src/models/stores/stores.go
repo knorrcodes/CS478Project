@@ -8,12 +8,13 @@ import (
 )
 
 type StoreCollection struct {
-	Product  ProductStore
-	Category CategoryStore
-	Server   ServerStore
-	Table    TableStore
-	CustCode CustCodeStore
-	Order    OrderStore
+	Product   ProductStore
+	Category  CategoryStore
+	Server    ServerStore
+	Table     TableStore
+	CustCode  CustCodeStore
+	Order     OrderStore
+	OrderItem OrderItemStore
 }
 
 // GetStoreCollectionFromContext retrieves the StoreCollection from the current request.

@@ -8,23 +8,19 @@ import (
 	"strconv"
 )
 
-type InputID struct {
-	ID int `json:"id"`
-}
-
 type NewOrder struct {
-	Table  *InputID `json:"table"`
-	Server *InputID `json:"server"`
+	Table  int `json:"table"`
+	Server int `json:"server"`
 }
 
 type NewProduct struct {
-	Name       string   `json:"name"`
-	Desc       *string  `json:"desc"`
-	Picture    *string  `json:"picture"`
-	Price      int      `json:"price"`
-	Category   *InputID `json:"category"`
-	Wscost     int      `json:"wscost"`
-	NumOfSides *int     `json:"num_of_sides"`
+	Name       string  `json:"name"`
+	Desc       *string `json:"desc"`
+	Picture    *string `json:"picture"`
+	Price      int     `json:"price"`
+	Category   int     `json:"category"`
+	Wscost     int     `json:"wscost"`
+	NumOfSides *int    `json:"num_of_sides"`
 }
 
 type OrderStatus string

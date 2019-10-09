@@ -2,6 +2,8 @@ package stores
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"koala.pos/src/common"
 	"koala.pos/src/models"
@@ -10,6 +12,7 @@ import (
 type ProductStore interface {
 	GetProducts() ([]*models.Product, error)
 	GetProductByID(id int) (*models.Product, error)
+	GetProductsByID(ids []int) ([]*models.Product, error)
 	Save(p *models.Product) error
 	Delete(p *models.Product) error
 }
@@ -39,6 +42,25 @@ func (s *Product) GetProductByID(id int) (*models.Product, error) {
 		return nil, err
 	}
 	return products[0], err
+}
+
+func (s *Product) GetProductsByID(ids []int) ([]*models.Product, error) {
+	if len(ids) == 0 {
+		return nil, errors.New("Product IDs required")
+	}
+
+	whereIn := strings.TrimRight(strings.Repeat("?,", len(ids)), ",")
+
+	sql := fmt.Sprintf(`WHERE "id" IN (%s)`, whereIn)
+	return s.getProductsFromDatabase(sql, intsToInterfaces(ids)...)
+}
+
+func intsToInterfaces(i []int) []interface{} {
+	ret := make([]interface{}, len(i))
+	for idx, v := range i {
+		ret[idx] = v
+	}
+	return ret
 }
 
 func (s *Product) getProductsFromDatabase(where string, values ...interface{}) ([]*models.Product, error) {

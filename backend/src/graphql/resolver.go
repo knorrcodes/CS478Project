@@ -26,6 +26,10 @@ func (r *Resolver) Order() OrderResolver {
 	return &orderResolver{r}
 }
 
+func (r *Resolver) OrderItem() OrderItemResolver {
+	return &orderItemResolver{r}
+}
+
 func (r *Resolver) Table() TableResolver {
 	return &tableResolver{r}
 }
@@ -82,6 +86,15 @@ func (r *orderResolver) Server(ctx context.Context, obj *models.Order) (*models.
 	return storeCollection.Server.GetByID(obj.ServerID)
 }
 
+func (r *orderResolver) Items(ctx context.Context, obj *models.Order) ([]*models.OrderItem, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.OrderItem.GetByOrder(obj.ID)
+}
+
 type tableResolver struct{ *Resolver }
 
 func (r *tableResolver) Orders(ctx context.Context, obj *models.Table) ([]*models.Order, error) {
@@ -91,4 +104,24 @@ func (r *tableResolver) Orders(ctx context.Context, obj *models.Table) ([]*model
 	}
 
 	return storeCollection.Order.GetOrdersByTable(obj.ID, stores.OrderStatusAny)
+}
+
+type orderItemResolver struct{ *Resolver }
+
+func (r *orderItemResolver) Products(ctx context.Context, obj *models.OrderItem) ([]*models.Product, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Product.GetProductsByID(obj.Products)
+}
+
+func (r *orderItemResolver) Order(ctx context.Context, obj *models.OrderItem) (*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Order.GetOrderByID(obj.OrderID)
 }
