@@ -10,6 +10,7 @@
             @click=""
             >French Fries
                 </button>
+
                 <button
             type="button"
             class=""
@@ -17,6 +18,7 @@
             @click=""
             >Baked Potato
                 </button>
+
                 <button
             type="button"
             class=""
@@ -24,6 +26,7 @@
             @click=""
             >Broccoli
                 </button>
+
                 <button
             type="button"
             class=""
@@ -31,6 +34,7 @@
             @click=""
             >Rice
                 </button>
+                
                 <button
             type="button"
             class=""
