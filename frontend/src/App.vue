@@ -1,16 +1,13 @@
 <template>
   <div class="background" id="app">
-    <div>
-      <img class="logoImage" src="../../docs/biglogo.png" alt="biglogo" />
-    </div>
-    <div id="login"></div>
-    <login-screen />
-    {{apiData}}
+    <img class="logoImage" src="../../docs/biglogo.png" alt />
+    <router-view />
   </div>
 </template>
 
 <script>
 import loginScreen from "./components/loginScreen.vue";
+import mainMenu from "./components/mainMenu.vue";
 import ApiClass from "./api";
 
 const axios = require("axios");
@@ -18,7 +15,8 @@ const axios = require("axios");
 export default {
   name: "app",
   components: {
-    loginScreen
+    loginScreen,
+    mainMenu
   },
   data() {
     return {

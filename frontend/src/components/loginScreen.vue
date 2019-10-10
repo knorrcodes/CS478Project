@@ -22,9 +22,6 @@
         <div v-if="clicked">
           <p>{{apiData}}</p>
         </div>
-        <div>
-          <button v-if="mainmenu">mainmenu</button>
-        </div>
       </div>
     </div>
   </div>
@@ -45,6 +42,7 @@ export default class loginScreen extends Vue {
   private serverCodeCheck() {
     if (this.serverCode == 478) {
       console.log("code is valid");
+      this.$router.push({ name: "mainMenu" });
     } else {
       console.log("code is not valid");
     }

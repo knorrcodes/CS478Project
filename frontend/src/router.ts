@@ -1,31 +1,65 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from './views/Home.vue';
+import loginScreen from './components/loginScreen.vue';
 import mainMenu from './components/mainMenu.vue';
+import chickenMenu from './components/entreeItems/chickenMenu.vue';
+import sideMenu from './components/sideMenu.vue';
+import apatizerMenu from './components/entreeItems/apatizerMenu.vue';
+import burgerMenu from './components/entreeItems/burgerMenu.vue';
+import dessertMenu from './components/entreeItems/dessertMenu.vue';
+import fishMenu from './components/entreeItems/fishMenu.vue';
+import steakMenu from './components/entreeItems/steakMenu.vue';
+
+
 
 Vue.use(Router);
 
 export default new Router({
-  mode: 'history',
-  base: process.env.BASE_URL,
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home,
+      name: 'loginScreen',
+      component: loginScreen,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue'),
-    },
-    {
-      path: '/mainManu',
+      path: '/mainMenu',
       name: 'mainMenu',
-      component: () => import('./components/mainMenu.vue'),
+      component: mainMenu,
+    },
+    {
+      path: '/chickenmenu',
+      name: 'chickenMenu',
+      component: chickenMenu,
+    },
+    {
+      path: '/sidemenu',
+      name: 'sideMenu',
+      component: sideMenu,
+    },
+    {
+      path: '/apatizermenu',
+      name: 'apatizerMenu',
+      component: apatizerMenu,
+    },
+    {
+      path: '/burgermenu',
+      name: 'burgerMenu',
+      component: burgerMenu,
+    },
+    {
+      path: '/dessertmenu',
+      name: 'dessertMenu',
+      component: dessertMenu,
+    },
+    {
+      path: '/fishmenu',
+      name: 'fishMenu',
+      component: fishMenu,
+    },
+    {
+      path: '/steakmenu',
+      name: 'steakMenu',
+      component: steakMenu,
     },
   ],
 });
