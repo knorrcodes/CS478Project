@@ -10,11 +10,11 @@ import dessertMenu from './components/entreeItems/dessertMenu.vue';
 import fishMenu from './components/entreeItems/fishMenu.vue';
 import steakMenu from './components/entreeItems/steakMenu.vue';
 
-
-
 Vue.use(Router);
 
 export default new Router({
+  mode: 'history',
+  base: process.env.BASE_URL,
   routes: [
     {
       path: '/',
@@ -27,37 +27,37 @@ export default new Router({
       component: mainMenu,
     },
     {
-      path: '/chickenmenu',
+      path: '/chickenMenu',
       name: 'chickenMenu',
       component: chickenMenu,
     },
     {
-      path: '/sidemenu',
+      path: '/sideMenu',
       name: 'sideMenu',
       component: sideMenu,
     },
     {
-      path: '/apatizermenu',
+      path: '/apatizerMenu',
       name: 'apatizerMenu',
       component: apatizerMenu,
     },
     {
-      path: '/burgermenu',
+      path: '/burgerMenu',
       name: 'burgerMenu',
       component: burgerMenu,
     },
     {
-      path: '/dessertmenu',
+      path: '/dessertMenu',
       name: 'dessertMenu',
       component: dessertMenu,
     },
     {
-      path: '/fishmenu',
+      path: '/fishMenu',
       name: 'fishMenu',
       component: fishMenu,
     },
     {
-      path: '/steakmenu',
+      path: '/steakMenu',
       name: 'steakMenu',
       component: steakMenu,
     },

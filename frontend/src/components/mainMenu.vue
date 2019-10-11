@@ -4,6 +4,7 @@
       <h1>Main Menu</h1>
       <div class="row">
         <div class="col" align="center">
+          <router-link to="/chickenMenu">chicken</router-link>
           <button type="button" class="btn btn-secondary mx-1" @click="clickedChicken">Chicken</button>
           <button type="button" class="btn btn-secondary mx-1" @click="clickedSteak">Steak</button>
           <button type="button" class="btn btn-secondary mx-1" @click="clickedFish">Fish</button>
