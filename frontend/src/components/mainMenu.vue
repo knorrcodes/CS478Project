@@ -4,13 +4,13 @@
       <h1>Main Menu</h1>
       <div class="row">
         <div class="col" align="center">
-          <router-link to="/chickenMenu">chicken</router-link>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedChicken">Chicken</button>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedSteak">Steak</button>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedFish">Fish</button>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedBurgers">Burgers</button>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedApatizers">Apatizers</button>
-          <button type="button" class="btn btn-secondary mx-1" @click="clickedDesserts">Desserts</button>
+          <router-link class="btn btn-secondary mx-1" to="/chickenMenu">Chicken</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/sideMenu">Sides</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/steakMenu">Steak</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/fishMenu">Fish</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/burgerMenu">Burgers</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/apatizerMenu">Apatizers</router-link>
+          <router-link class="btn btn-secondary mx-1" to="/dessertMenu">Desserts</router-link>
         </div>
       </div>
     </div>
@@ -21,32 +21,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 
 @Component
-export default class mainMenu extends Vue {
-  private clickedChicken() {
-    console.log("chicken clicked");
-    this.$router.push({ name: "sideMenu" });
-  }
-  private clickedSteak() {
-    console.log("Clicked Steak");
-    this.$router.push({ name: "steakMenu" });
-  }
-  private clickedFish() {
-    console.log("Clicked Fish");
-    this.$router.push({ name: "fishMenu" });
-  }
-  private clickedBurgers() {
-    console.log("Clicked Burgers");
-    this.$router.push({ name: "burgerMenu" });
-  }
-  private clickedApatizers() {
-    console.log("Clicked Apatizers");
-    this.$router.push({ name: "apatizerMenu" });
-  }
-  private clickedDesserts() {
-    console.log("Clicked Deserts");
-    this.$router.push({ name: "dessertMenu" });
-  }
-}
+export default class mainMenu extends Vue {}
 </script>
 
 <style scoped>

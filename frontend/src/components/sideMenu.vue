@@ -39,8 +39,9 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
+@Component
 export default class sideMenu extends Vue {
   private clickedFrenchFries() {
     console.log("Clicked French Fries");

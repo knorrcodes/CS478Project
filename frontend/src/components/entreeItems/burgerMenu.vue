@@ -6,8 +6,9 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
+@Component
 export default class burgerMenu extends Vue {}
 </script>
 
