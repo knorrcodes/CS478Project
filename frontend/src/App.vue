@@ -1,13 +1,21 @@
 <template>
   <div class="background" id="app">
-    <img class="logoImage" src="../../docs/biglogo.png" alt />
-    <router-view />
+    <img class="logoImage" src="../../docs/biglogo.png" alt="big team logo" />
+    <div class="row">
+      <div class="col-4 px-4">
+        <table-order />
+      </div>
+      <div class="col-8">
+        <router-view />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import loginScreen from "./components/loginScreen.vue";
 import mainMenu from "./components/mainMenu.vue";
+import tableOrder from "./components/tableOrder.vue";
 import ApiClass from "./api";
 
 const axios = require("axios");
@@ -16,7 +24,8 @@ export default {
   name: "app",
   components: {
     loginScreen,
-    mainMenu
+    mainMenu,
+    tableOrder
   },
   data() {
     return {
@@ -36,7 +45,8 @@ export default {
 <style>
 .background {
   background-color: rgb(255, 111, 111);
-  height: 100vh;
+  height: 100%;
+  min-height: 100vh;
 }
 
 .logoImage {

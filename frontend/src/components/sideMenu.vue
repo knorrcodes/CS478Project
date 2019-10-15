@@ -2,38 +2,11 @@
   <div class="sideMenu component">
     <h1>Sides Menu</h1>
     <div class="row justify-content-center">
-      <form action>
-        <p class="text-center textFormat">Sides</p>
-        <button
-          type="button"
-          class="btn btn-secondary mx-1"
-          id="btnFrenchFries"
-          @click="clickedFrenchFries"
-        >French Fries</button>
-
-        <button
-          type="button"
-          class="btn btn-secondary mx-1"
-          id="btnPotato"
-          @click="clickedBakedPotato"
-        >Baked Potato</button>
-
-        <button
-          type="button"
-          class="btn btn-secondary mx-1"
-          id="btnBroccoli"
-          @click="clickedBroccoli"
-        >Broccoli</button>
-
-        <button type="button" class="btn btn-secondary mx-1" id="btnRice" @click="clickedRice">Rice</button>
-
-        <button
-          type="button"
-          class="btn btn-secondary mx-1"
-          id="btnAsparagus"
-          @click="clickedAsparagus"
-        >Asparagus</button>
-      </form>
+      <router-link class="btn btn-secondary mx-1" to="/drinkMenu">French Fries</router-link>
+      <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Baked Potato</router-link>
+      <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Broccoli</router-link>
+      <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Asparagus</router-link>
+      <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Rice</router-link>
     </div>
   </div>
 </template>
@@ -42,24 +15,11 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
-export default class sideMenu extends Vue {
-  private clickedFrenchFries() {
-    console.log("Clicked French Fries");
-  }
-  private clickedBakedPotato() {
-    console.log("Clicked Baked Potato");
-  }
-  private clickedBroccoli() {
-    console.log("Clicked Brocolli");
-  }
-  private clickedRice() {
-    console.log("Clicked Rice");
-  }
-  private clickedAsparagus() {
-    console.log("Clicked Asparagus");
-  }
-}
+export default class sideMenu extends Vue {}
 </script>
 
 <style scoped>
+h1 {
+  text-align: center;
+}
 </style>
