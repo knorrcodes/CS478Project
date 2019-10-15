@@ -11,8 +11,6 @@ import fishMenu from './components/entreeItems/fishMenu.vue';
 import steakMenu from './components/entreeItems/steakMenu.vue';
 import drinkMenu from './components/drinkMenu.vue';
 
-import HelloWorld from './components/HelloWorld.vue';
-
 Vue.use(Router);
 
 export default new Router({
@@ -47,7 +45,7 @@ export default new Router({
     {
       path: '/burgerMenu',
       name: 'burgerMenu',
-      component: burgerMenu
+      component: burgerMenu,
     },
     {
       path: '/dessertMenu',
@@ -69,5 +67,5 @@ export default new Router({
       name: 'drinkMenu',
       component: drinkMenu,
     },
-  ]
+  ],
 });

@@ -12,7 +12,7 @@ export default class ApiClass {
 
     public getAllTestData(URL: string, apiData: any) {
         /*         this.clicked = !this.clicked;*/
-        fetch("https://jsonplaceholder.typicode.com/todos")
+        fetch('https://jsonplaceholder.typicode.com/todos')
             .then((response) => response.json())
             .then((json) => (apiData = json));
     }

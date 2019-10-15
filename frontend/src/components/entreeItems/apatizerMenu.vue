@@ -1,8 +1,8 @@
 <template>
   <div class="container text-center">
     <h1>Apatizer Menu</h1>
-    <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Fried Pickles</router-link>
-    <router-link class="btn btn-secondary mx-1" to="/drinkMenu">Mozz Sticks</router-link>
+    <router-link class="btn btn-secondary mx-1 my-1" to="/drinkMenu">Fried Pickles</router-link>
+    <router-link class="btn btn-secondary mx-1 my-1" to="/drinkMenu">Mozz Sticks</router-link>
   </div>
 </template>
 

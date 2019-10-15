@@ -11,6 +11,9 @@
             @keydown.enter.prevent="serverCodeCheck"
             type="number"
           />
+          <div v-if="isError">
+            <h4 class="errorMessage">{{error}}</h4>
+          </div>
           <br />
           <button
             type="button"
@@ -38,12 +41,16 @@ export default class loginScreen extends Vue {
   private apiData: String = "";
   clicked: boolean = false;
   private mainMenu = true;
+  private isError = false;
+  private error = "";
 
   private serverCodeCheck() {
     if (this.serverCode == 478) {
       console.log("code is valid");
       this.$router.push({ name: "mainMenu" });
     } else {
+      this.isError = true;
+      this.error = "code is not valid";
       console.log("code is not valid");
     }
   }
@@ -76,5 +83,10 @@ input[type="number"]::-webkit-outer-spin-button {
   -moz-appearance: none;
   appearance: none;
   margin: 0;
+}
+
+.errorMessage {
+  color: red;
+  text-transform: uppercase;
 }
 </style>

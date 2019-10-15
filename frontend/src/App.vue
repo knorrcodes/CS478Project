@@ -31,7 +31,10 @@ export default {
     return {
       apiData: null
     };
+    currentPath = window.location.path;
+    showTicket = true;
   }
+
   /*
   mounted() {
     axios

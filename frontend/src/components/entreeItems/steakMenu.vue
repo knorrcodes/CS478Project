@@ -1,9 +1,9 @@
 <template>
   <div class="containter text-center">
     <h1>Steak Menu</h1>
-    <router-link class="btn btn-secondary mx-1" to="/sideMenu">6oz Filet</router-link>
-    <router-link class="btn btn-secondary mx-1" to="/sideMenu">9oz Filet</router-link>
-    <router-link class="btn btn-secondary mx-1" to="/sideMenu">Steak Salad</router-link>
+    <router-link class="btn btn-secondary mx-1 my-1" to="/sideMenu">6oz Filet</router-link>
+    <router-link class="btn btn-secondary mx-1 my-1" to="/sideMenu">9oz Filet</router-link>
+    <router-link class="btn btn-secondary mx-1 my-1" to="/sideMenu">Steak Salad</router-link>
   </div>
 </template>
 
