@@ -30,6 +30,7 @@ type Order {
     table: Table!
     server: Server!
     items: [OrderItem!]!
+    payments: [Payment!]!
 }
 
 type Table {
@@ -50,6 +51,13 @@ type OrderItem {
     id: ID!
     products: [Product!]!
     order: Order!
+}
+
+type Payment {
+    id: ID!
+    order: Order!
+    amount: Int!
+    timestamp: Time!
 }
 
 enum OrderStatus {
@@ -92,6 +100,11 @@ input NewOrder {
     server: ID!
 }
 
+input AddPaymentInput{
+    order: ID!
+    amount: Int!
+}
+
 type Mutation {
     createProduct(p: NewProduct!): Product!
     createCategory(name: String!): Category!
@@ -101,4 +114,5 @@ type Mutation {
     startOrder(o: NewOrder!): Order!
     closeOrder(id: ID!): Order!
     addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
+    applyPayment(input: AddPaymentInput!): Payment
 }

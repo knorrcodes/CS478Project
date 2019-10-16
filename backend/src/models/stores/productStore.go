@@ -9,6 +9,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// ProductStore interface type for productStore
 type ProductStore interface {
 	GetProducts() ([]*models.Product, error)
 	GetProductByID(id int) (*models.Product, error)
@@ -17,20 +18,24 @@ type ProductStore interface {
 	Delete(p *models.Product) error
 }
 
+// Product struct type for productStore
 type Product struct {
 	e *common.Environment
 }
 
+// NewProductStore function for productStore
 func NewProductStore(e *common.Environment) *Product {
 	return &Product{
 		e: e,
 	}
 }
 
+// GetProducts function for productStore
 func (s *Product) GetProducts() ([]*models.Product, error) {
 	return s.getProductsFromDatabase("")
 }
 
+// GetProductByID function for productStore
 func (s *Product) GetProductByID(id int) (*models.Product, error) {
 	if id == 0 {
 		return nil, errors.New("Product ID required")
@@ -44,6 +49,7 @@ func (s *Product) GetProductByID(id int) (*models.Product, error) {
 	return products[0], err
 }
 
+// GetProductsByID function for productStore
 func (s *Product) GetProductsByID(ids []int) ([]*models.Product, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("Product IDs required")
@@ -121,6 +127,7 @@ func (s *Product) getProductsFromDatabase(where string, values ...interface{}) (
 	return results, nil
 }
 
+// Save function for productStore
 func (s *Product) Save(p *models.Product) error {
 	if p.ID == 0 {
 		return s.saveNew(p)
@@ -186,6 +193,7 @@ func (s *Product) saveNew(p *models.Product) error {
 	return nil
 }
 
+// Delete function for productStore
 func (s *Product) Delete(p *models.Product) error {
 	if p.ID == 0 {
 		return nil

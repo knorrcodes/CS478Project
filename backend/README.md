@@ -37,7 +37,7 @@ terminal. I would recommend using this target for development. `runDev` will
 start the containers and exit not showing any logs.
 
 Once the application and database are started, the server will be available at
-`http://localhost:8080'. You can use `docker ps` to make sure both the
+`http://localhost:8080` You can use `docker ps` to make sure both the
 application and database containers started.
 
 If you recompile the application, run `go run mage.go restartDev` to restart the

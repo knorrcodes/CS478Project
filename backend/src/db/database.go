@@ -29,6 +29,7 @@ func newDBConnector() *database {
 		"cust_code":  m.createCustCodeTable,
 		"order_item": m.createOrderItemTable,
 		"settings":   m.createSettingTable,
+		"payment":    m.createPaymentTable,
 	}
 
 	m.migrateFuncs = []migrateFunc{}
@@ -81,7 +82,7 @@ func (m *database) connect(d *common.DatabaseAccessor, c *common.Config) error {
 	}
 
 	if !strings.Contains(mode, "ANSI") {
-		return errors.New("MySQL must be in ANSI mode. Please set the global mode or edit the my.cnf file to enable ANSI sql_mode.")
+		return errors.New("mySQL must be in ANSI mode. Please set the global mode or edit the my.cnf file to enable ANSI sql_mode")
 	}
 	return nil
 }
@@ -312,6 +313,18 @@ func (m *database) createOrderItemTable(d *common.DatabaseAccessor) error {
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"products" JSON NOT NULL,
 		"order_id" INT NOT NULL,
+		INDEX ("order_id")
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
+	_, err := d.DB.Exec(sql)
+	return err
+}
+
+func (m *database) createPaymentTable(d *common.DatabaseAccessor) error {
+	sql := `CREATE TABLE "payment" (
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"order_id" INT NOT NULL,
+		"amount" INT NOT NULL,
+		"timestamp" INT UNSIGNED NOT NULL DEFAULT (0),
 		INDEX ("order_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)

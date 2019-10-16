@@ -193,3 +193,29 @@ func (r *mutationResolver) AddItemToOrder(ctx context.Context, orderID int, prod
 
 	return orderItem, nil
 }
+
+func (r *mutationResolver) ApplyPayment(ctx context.Context, input AddPaymentInput) (*models.Payment, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	order, err := storeCollection.Order.GetOrderByID(input.Order)
+	if err != nil {
+		return nil, err
+	}
+
+	if !order.IsOpen() {
+		return nil, errors.New("cannot add payment to a closed order")
+	}
+
+	payment := models.NewPayment(storeCollection.Payment)
+	payment.OrderID = input.Order
+	payment.Amount = input.Amount
+	payment.Timestamp = time.Now()
+	if err := payment.Save(); err != nil {
+		return nil, err
+	}
+
+	return payment, nil
+}

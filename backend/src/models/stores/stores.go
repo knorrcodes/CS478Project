@@ -7,6 +7,7 @@ import (
 	"koala.pos/src/common"
 )
 
+// StoreCollection of structures
 type StoreCollection struct {
 	Product   ProductStore
 	Category  CategoryStore
@@ -15,6 +16,7 @@ type StoreCollection struct {
 	CustCode  CustCodeStore
 	Order     OrderStore
 	OrderItem OrderItemStore
+	Payment   PaymentStore
 }
 
 // GetStoreCollectionFromContext retrieves the StoreCollection from the current request.

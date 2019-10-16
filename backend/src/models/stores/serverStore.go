@@ -7,6 +7,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// ServerStore interface type for serverStore
 type ServerStore interface {
 	Get() ([]*models.Server, error)
 	GetByID(id int) (*models.Server, error)
@@ -15,20 +16,24 @@ type ServerStore interface {
 	GetByCode(code int) (*models.Server, error)
 }
 
+// Server struct type for serverStore
 type Server struct {
 	e *common.Environment
 }
 
+// NewServerStore function for serverStore
 func NewServerStore(e *common.Environment) *Server {
 	return &Server{
 		e: e,
 	}
 }
 
+// Get function for serverStore
 func (s *Server) Get() ([]*models.Server, error) {
 	return s.getFromDatabase("")
 }
 
+// GetByID function for serverStore
 func (s *Server) GetByID(id int) (*models.Server, error) {
 	if id == 0 {
 		return nil, errors.New("Server ID required")
@@ -42,6 +47,7 @@ func (s *Server) GetByID(id int) (*models.Server, error) {
 	return Servers[0], err
 }
 
+// GetByCode function for serverStore
 func (s *Server) GetByCode(code int) (*models.Server, error) {
 	if code == 0 {
 		return nil, errors.New("Server code required")
@@ -97,6 +103,7 @@ func (s *Server) getFromDatabase(where string, values ...interface{}) ([]*models
 	return results, nil
 }
 
+// Save function for serverStore
 func (s *Server) Save(p *models.Server) error {
 	if p.ID == 0 {
 		return s.saveNew(p)
@@ -146,6 +153,7 @@ func (s *Server) saveNew(p *models.Server) error {
 	return nil
 }
 
+// Delete function for serverStore
 func (s *Server) Delete(p *models.Server) error {
 	if p.ID == 0 {
 		return nil

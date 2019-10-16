@@ -77,6 +77,7 @@ func main() {
 		CustCode:  stores.NewCustCodeStore(e),
 		Order:     stores.NewOrderStore(e),
 		OrderItem: stores.NewOrderItemStore(e),
+		Payment:   stores.NewPaymentStore(e),
 	}
 
 	// Start web server

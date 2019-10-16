@@ -38,3 +38,5 @@ models:
     model: koala.pos/src/models.Order
   OrderItem:
     model: koala.pos/src/models.OrderItem
+  Payment:
+    model: koala.pos/src/models.Payment

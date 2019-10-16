@@ -13,6 +13,7 @@ import (
 // Resolver is the root GraphQL resolver
 type Resolver struct{}
 
+// CustCode is the customer code resolver
 func (r *Resolver) CustCode() CustCodeResolver {
 	return &custCodeResolver{r}
 }
@@ -22,14 +23,22 @@ func (r *Resolver) Product() ProductResolver {
 	return &productResolver{r}
 }
 
+// Order is the order resolver
 func (r *Resolver) Order() OrderResolver {
 	return &orderResolver{r}
 }
 
+// OrderItem is the orderitem resolver
 func (r *Resolver) OrderItem() OrderItemResolver {
 	return &orderItemResolver{r}
 }
 
+// Payment is the payment resolver
+func (r *Resolver) Payment() PaymentResolver {
+	return &paymentResolver{r}
+}
+
+// Table is the table resolver
 func (r *Resolver) Table() TableResolver {
 	return &tableResolver{r}
 }
@@ -95,6 +104,15 @@ func (r *orderResolver) Items(ctx context.Context, obj *models.Order) ([]*models
 	return storeCollection.OrderItem.GetByOrder(obj.ID)
 }
 
+func (r *orderResolver) Payments(ctx context.Context, obj *models.Order) ([]*models.Payment, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Payment.GetPaymentsForOrder(obj.ID)
+}
+
 type tableResolver struct{ *Resolver }
 
 func (r *tableResolver) Orders(ctx context.Context, obj *models.Table) ([]*models.Order, error) {
@@ -118,6 +136,17 @@ func (r *orderItemResolver) Products(ctx context.Context, obj *models.OrderItem)
 }
 
 func (r *orderItemResolver) Order(ctx context.Context, obj *models.OrderItem) (*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Order.GetOrderByID(obj.ID)
+}
+
+type paymentResolver struct{ *Resolver }
+
+func (r *paymentResolver) Order(ctx context.Context, obj *models.Payment) (*models.Order, error) {
 	storeCollection := stores.GetStoreCollectionFromContext(ctx)
 	if storeCollection == nil {
 		return nil, errors.New("Failed to get storage")

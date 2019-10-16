@@ -8,14 +8,17 @@ import (
 	"koala.pos/src/models"
 )
 
+// OrderStatus type for orderStore
 type OrderStatus int
 
+// const for orderStore
 const (
 	OrderStatusOpened OrderStatus = iota
 	OrderStatusClosed
 	OrderStatusAny
 )
 
+// OrderStore interface for orderStore
 type OrderStore interface {
 	GetOrders(status OrderStatus) ([]*models.Order, error)
 	GetOrderByID(id int) (*models.Order, error)
@@ -26,16 +29,19 @@ type OrderStore interface {
 	Delete(c *models.Order) error
 }
 
+// Order type for orderStore
 type Order struct {
 	e *common.Environment
 }
 
+// NewOrderStore function for orderStore
 func NewOrderStore(e *common.Environment) *Order {
 	return &Order{
 		e: e,
 	}
 }
 
+// GetOrders function for orderStore
 func (s *Order) GetOrders(status OrderStatus) ([]*models.Order, error) {
 	if status < OrderStatusOpened || status > OrderStatusAny {
 		return nil, errors.New("invalid order status")
@@ -53,6 +59,7 @@ func (s *Order) GetOrders(status OrderStatus) ([]*models.Order, error) {
 	}
 }
 
+// GetOrderByID function for orderStore
 func (s *Order) GetOrderByID(id int) (*models.Order, error) {
 	if id == 0 {
 		return nil, errors.New("Order ID required")
@@ -66,6 +73,7 @@ func (s *Order) GetOrderByID(id int) (*models.Order, error) {
 	return codes[0], err
 }
 
+// GetOrdersByServer function for orderStore
 func (s *Order) GetOrdersByServer(id int, status OrderStatus) ([]*models.Order, error) {
 	if id == 0 {
 		return nil, errors.New("Server ID required")
@@ -84,6 +92,7 @@ func (s *Order) GetOrdersByServer(id int, status OrderStatus) ([]*models.Order, 
 	}
 }
 
+// GetOrdersByTable function for orderStore
 func (s *Order) GetOrdersByTable(id int, status OrderStatus) ([]*models.Order, error) {
 	if id == 0 {
 		return nil, errors.New("Table ID required")
@@ -102,6 +111,7 @@ func (s *Order) GetOrdersByTable(id int, status OrderStatus) ([]*models.Order, e
 	}
 }
 
+// GetLatestOrderByTable function for orderStore
 func (s *Order) GetLatestOrderByTable(id int) (*models.Order, error) {
 	if id == 0 {
 		return nil, errors.New("Table ID required")
@@ -161,6 +171,7 @@ func (s *Order) getOrdersFromDatabase(where string, values ...interface{}) ([]*m
 	return results, nil
 }
 
+// Save function for orderStore
 func (s *Order) Save(c *models.Order) error {
 	if c.ID == 0 {
 		return s.saveNew(c)
@@ -211,6 +222,7 @@ func (s *Order) saveNew(c *models.Order) error {
 	return nil
 }
 
+// Delete function for orderStore
 func (s *Order) Delete(c *models.Order) error {
 	if c.ID == 0 {
 		return nil

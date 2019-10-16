@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // PaymentStore interface type
 type PaymentStore interface {
 	Save(*Payment) error
@@ -9,10 +11,10 @@ type PaymentStore interface {
 // Payment objects
 type Payment struct {
 	store     PaymentStore
-	ID        int     `json:"id"`
-	OrderID   int     `json:"order_id"`
-	Amount    int 	  `json:"amount"`
-	Timestamp int     `json:"timestamp"`
+	ID        int       `json:"id"`
+	OrderID   int       `json:"order_id"`
+	Amount    int       `json:"amount"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // NewPayment creates a new Payment object

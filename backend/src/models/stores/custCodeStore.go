@@ -8,6 +8,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// CustCodeStore interface type for custCodeStore
 type CustCodeStore interface {
 	GetCustCodes() ([]*models.CustCode, error)
 	GetCustCodeByID(id int) (*models.CustCode, error)
@@ -16,20 +17,24 @@ type CustCodeStore interface {
 	Delete(c *models.CustCode) error
 }
 
+// CustCode struct type for custCodeStore
 type CustCode struct {
 	e *common.Environment
 }
 
+// NewCustCodeStore function for custCodeStore
 func NewCustCodeStore(e *common.Environment) *CustCode {
 	return &CustCode{
 		e: e,
 	}
 }
 
+// GetCustCodes function for custCodeStore
 func (s *CustCode) GetCustCodes() ([]*models.CustCode, error) {
 	return s.getCodesFromDatabase("")
 }
 
+// GetCustCodeByID function for custCodeStore
 func (s *CustCode) GetCustCodeByID(id int) (*models.CustCode, error) {
 	if id == 0 {
 		return nil, errors.New("CustCode ID required")
@@ -43,6 +48,7 @@ func (s *CustCode) GetCustCodeByID(id int) (*models.CustCode, error) {
 	return codes[0], err
 }
 
+// GetCustCodeByCode function for custCodeStore
 func (s *CustCode) GetCustCodeByCode(code string) (*models.CustCode, error) {
 	if code == "" {
 		return nil, nil
@@ -102,6 +108,7 @@ func (s *CustCode) getCodesFromDatabase(where string, values ...interface{}) ([]
 	return results, nil
 }
 
+// Save function for custCodeStore
 func (s *CustCode) Save(c *models.CustCode) error {
 	if c.ID == 0 {
 		return s.saveNew(c)
@@ -156,6 +163,7 @@ func (s *CustCode) saveNew(c *models.CustCode) error {
 	return nil
 }
 
+// Delete function for custCodeStore
 func (s *CustCode) Delete(c *models.CustCode) error {
 	if c.ID == 0 {
 		return nil

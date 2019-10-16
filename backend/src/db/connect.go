@@ -9,6 +9,7 @@ import (
 	log "github.com/lfkeitel/verbose/v5"
 )
 
+// DBVersion const 1
 const DBVersion = 1
 
 type dbInit interface {
@@ -19,10 +20,12 @@ var dbInits = make(map[string]dbInit)
 
 type migrateFunc func(*common.DatabaseAccessor, *common.Config) error
 
+// RegisterDatabaseAccessor function
 func RegisterDatabaseAccessor(name string, db dbInit) {
 	dbInits[name] = db
 }
 
+// NewDatabaseAccessor function
 func NewDatabaseAccessor(e *common.Environment) (*common.DatabaseAccessor, error) {
 	da := &common.DatabaseAccessor{}
 

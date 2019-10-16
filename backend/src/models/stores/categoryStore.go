@@ -7,6 +7,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// CategoryStore interface type for categoryStore
 type CategoryStore interface {
 	GetCategories() ([]*models.Category, error)
 	GetCategoryByID(id int) (*models.Category, error)
@@ -14,20 +15,24 @@ type CategoryStore interface {
 	Delete(c *models.Category) error
 }
 
+// Category struct type for categoryStore
 type Category struct {
 	e *common.Environment
 }
 
+// NewCategoryStore function for categoryStore
 func NewCategoryStore(e *common.Environment) *Category {
 	return &Category{
 		e: e,
 	}
 }
 
+// GetCategories function for categoryStore
 func (s *Category) GetCategories() ([]*models.Category, error) {
 	return s.getCategoriesFromDatabase("")
 }
 
+// GetCategoryByID function for categoryStore
 func (s *Category) GetCategoryByID(id int) (*models.Category, error) {
 	if id == 0 {
 		return nil, errors.New("Category ID required")
@@ -75,6 +80,7 @@ func (s *Category) getCategoriesFromDatabase(where string, values ...interface{}
 	return results, nil
 }
 
+// Save function for categoryStore
 func (s *Category) Save(c *models.Category) error {
 	if c.ID == 0 {
 		return s.saveNew(c)
@@ -112,6 +118,7 @@ func (s *Category) saveNew(c *models.Category) error {
 	return nil
 }
 
+// Delete function for categoryStore
 func (s *Category) Delete(c *models.Category) error {
 	if c.ID == 0 {
 		return nil

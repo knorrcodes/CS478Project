@@ -8,6 +8,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// OrderItemStore interface type for orderItemStore
 type OrderItemStore interface {
 	Get() ([]*models.OrderItem, error)
 	GetByID(id int) (*models.OrderItem, error)
@@ -16,20 +17,24 @@ type OrderItemStore interface {
 	Delete(c *models.OrderItem) error
 }
 
+// OrderItem struct type for orderItemStore
 type OrderItem struct {
 	e *common.Environment
 }
 
+// NewOrderItemStore function for orderItemStore
 func NewOrderItemStore(e *common.Environment) *OrderItem {
 	return &OrderItem{
 		e: e,
 	}
 }
 
+// Get function for orderItemStore
 func (s *OrderItem) Get() ([]*models.OrderItem, error) {
 	return s.getItemsFromDatabase("")
 }
 
+// GetByID function for orderItemStore
 func (s *OrderItem) GetByID(id int) (*models.OrderItem, error) {
 	if id == 0 {
 		return nil, errors.New("Order item ID required")
@@ -43,6 +48,7 @@ func (s *OrderItem) GetByID(id int) (*models.OrderItem, error) {
 	return categories[0], err
 }
 
+// GetByOrder function for orderItemStore
 func (s *OrderItem) GetByOrder(id int) ([]*models.OrderItem, error) {
 	if id == 0 {
 		return nil, errors.New("Order ID required")
@@ -93,6 +99,7 @@ func (s *OrderItem) getItemsFromDatabase(where string, values ...interface{}) ([
 	return results, nil
 }
 
+// Save function for orderItemStore
 func (s *OrderItem) Save(c *models.OrderItem) error {
 	if c.ID == 0 {
 		return s.saveNew(c)
@@ -132,6 +139,7 @@ func (s *OrderItem) saveNew(c *models.OrderItem) error {
 	return nil
 }
 
+// Delete function for orderItemStore
 func (s *OrderItem) Delete(c *models.OrderItem) error {
 	if c.ID == 0 {
 		return nil

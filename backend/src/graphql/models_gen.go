@@ -8,6 +8,11 @@ import (
 	"strconv"
 )
 
+type AddPaymentInput struct {
+	Order  int `json:"order"`
+	Amount int `json:"amount"`
+}
+
 type NewOrder struct {
 	Table  int `json:"table"`
 	Server int `json:"server"`

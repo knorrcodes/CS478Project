@@ -7,6 +7,7 @@ import (
 	"koala.pos/src/models"
 )
 
+// TableStore type for Table
 type TableStore interface {
 	GetTables() ([]*models.Table, error)
 	GetTableByID(id int) (*models.Table, error)
@@ -15,20 +16,24 @@ type TableStore interface {
 	Delete(c *models.Table) error
 }
 
+// Table type for Table
 type Table struct {
 	e *common.Environment
 }
 
+// NewTableStore function for Table
 func NewTableStore(e *common.Environment) *Table {
 	return &Table{
 		e: e,
 	}
 }
 
+// GetTables function for Table
 func (s *Table) GetTables() ([]*models.Table, error) {
 	return s.getTablesFromDatabase("")
 }
 
+// GetTableByID function for Table
 func (s *Table) GetTableByID(id int) (*models.Table, error) {
 	if id == 0 {
 		return nil, errors.New("Table ID required")
@@ -42,6 +47,7 @@ func (s *Table) GetTableByID(id int) (*models.Table, error) {
 	return categories[0], err
 }
 
+// GetTableByNumber function for Table
 func (s *Table) GetTableByNumber(id int) (*models.Table, error) {
 	if id == 0 {
 		return nil, errors.New("Table number required")
@@ -89,6 +95,7 @@ func (s *Table) getTablesFromDatabase(where string, values ...interface{}) ([]*m
 	return results, nil
 }
 
+// Save function for Table
 func (s *Table) Save(c *models.Table) error {
 	if c.ID == 0 {
 		return s.saveNew(c)
@@ -126,6 +133,7 @@ func (s *Table) saveNew(c *models.Table) error {
 	return nil
 }
 
+// Delete function for Table
 func (s *Table) Delete(c *models.Table) error {
 	if c.ID == 0 {
 		return nil

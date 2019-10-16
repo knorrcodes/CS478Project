@@ -12,6 +12,7 @@ import (
 type PaymentStore interface {
 	GetPayments() ([]*models.Payment, error)
 	GetPaymentByID(id int) (*models.Payment, error)
+	GetPaymentsForOrder(orderID int) ([]*models.Payment, error)
 	Save(c *models.Payment) error
 	Delete(c *models.Payment) error
 }
@@ -39,7 +40,7 @@ func (s *Payment) GetPaymentByID(id int) (*models.Payment, error) {
 		return nil, errors.New("Payment ID required")
 	}
 
-	sql := `WHERE "id" = ?`
+	sql := `WHERE "id" = ? ORDER BY "timestamp"`
 	payments, err := s.getPaymentsFromDatabase(sql, id)
 	if len(payments) == 0 {
 		return nil, err
@@ -47,10 +48,20 @@ func (s *Payment) GetPaymentByID(id int) (*models.Payment, error) {
 	return payments[0], err
 }
 
+//GetPaymentsForOrder function for payment
+func (s *Payment) GetPaymentsForOrder(orderID int) ([]*models.Payment, error) {
+	if orderID == 0 {
+		return nil, errors.New("Order ID required")
+	}
+
+	sql := `WHERE "order_id" = ? ORDER BY "timestamp"`
+	return s.getPaymentsFromDatabase(sql, orderID)
+}
+
 func (s *Payment) getPaymentsFromDatabase(where string, values ...interface{}) ([]*models.Payment, error) {
 	sql := `SELECT
 				"id",
-				"orderID",
+				"order_id",
 				"amount",
 				"timestamp"
 			FROM "payment" ` + where
@@ -78,13 +89,13 @@ func (s *Payment) getPaymentsFromDatabase(where string, values ...interface{}) (
 			continue
 		}
 
-		payment := models.NewPayment(s)
-		payment.ID = id
-		payment.OrderID = orderID
-		payment.Amount = amount
-		payment.Timestamp = time.Unix(timestamp, 0)
+		Payment := models.NewPayment(s)
+		Payment.ID = id
+		Payment.OrderID = orderID
+		Payment.Amount = amount
+		Payment.Timestamp = time.Unix(timestamp, 0)
 
-		results = append(results, payment)
+		results = append(results, Payment)
 	}
 	return results, nil
 }
@@ -99,7 +110,7 @@ func (s *Payment) Save(c *models.Payment) error {
 
 func (s *Payment) updateExisting(c *models.Payment) error {
 	sql := `UPDATE "payment"
-			SET "orderID" = ?,
+			SET "order_id" = ?,
 				"amount" = ?,
 				"timestamp" = ?
 			WHERE "id" = ?`
@@ -108,28 +119,28 @@ func (s *Payment) updateExisting(c *models.Payment) error {
 		sql,
 		c.OrderID,
 		c.Amount,
-		c.Timestamp,
+		c.Timestamp.Unix(),
 		c.ID,
 	)
 	return err
 }
 
 func (s *Payment) saveNew(c *models.Payment) error {
-	if c.Amount == "" {
+	if c.Amount == 0 {
 		return errors.New("Payment Amount cannot be empty")
 	}
 
 	sql := `INSERT INTO "payment" (
-				"orderID"
-				"amount"
+				"order_id",
+				"amount",
 				"timestamp"
-			) VALUES (?, ?, ?, ?)`
+			) VALUES (?, ?, ?)`
 
 	result, err := s.e.DB.Exec(
 		sql,
 		c.OrderID,
 		c.Amount,
-		c.Timestamp,
+		c.Timestamp.Unix(),
 	)
 	if err != nil {
 		return err

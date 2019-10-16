@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Order() OrderResolver
 	OrderItem() OrderItemResolver
+	Payment() PaymentResolver
 	Product() ProductResolver
 	Query() QueryResolver
 	Table() TableResolver
@@ -64,6 +65,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddItemToOrder func(childComplexity int, order int, products []int) int
+		ApplyPayment   func(childComplexity int, input AddPaymentInput) int
 		CloseOrder     func(childComplexity int, id int) int
 		CreateCategory func(childComplexity int, name string) int
 		CreateCustCode func(childComplexity int, id int) int
@@ -76,6 +78,7 @@ type ComplexityRoot struct {
 		EndTime   func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Items     func(childComplexity int) int
+		Payments  func(childComplexity int) int
 		Server    func(childComplexity int) int
 		StartTime func(childComplexity int) int
 		Table     func(childComplexity int) int
@@ -85,6 +88,13 @@ type ComplexityRoot struct {
 		ID       func(childComplexity int) int
 		Order    func(childComplexity int) int
 		Products func(childComplexity int) int
+	}
+
+	Payment struct {
+		Amount    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Order     func(childComplexity int) int
+		Timestamp func(childComplexity int) int
 	}
 
 	Product struct {
@@ -137,15 +147,20 @@ type MutationResolver interface {
 	StartOrder(ctx context.Context, o NewOrder) (*models.Order, error)
 	CloseOrder(ctx context.Context, id int) (*models.Order, error)
 	AddItemToOrder(ctx context.Context, order int, products []int) (*models.OrderItem, error)
+	ApplyPayment(ctx context.Context, input AddPaymentInput) (*models.Payment, error)
 }
 type OrderResolver interface {
 	Table(ctx context.Context, obj *models.Order) (*models.Table, error)
 	Server(ctx context.Context, obj *models.Order) (*models.Server, error)
 	Items(ctx context.Context, obj *models.Order) ([]*models.OrderItem, error)
+	Payments(ctx context.Context, obj *models.Order) ([]*models.Payment, error)
 }
 type OrderItemResolver interface {
 	Products(ctx context.Context, obj *models.OrderItem) ([]*models.Product, error)
 	Order(ctx context.Context, obj *models.OrderItem) (*models.Order, error)
+}
+type PaymentResolver interface {
+	Order(ctx context.Context, obj *models.Payment) (*models.Order, error)
 }
 type ProductResolver interface {
 	Category(ctx context.Context, obj *models.Product) (*models.Category, error)
@@ -243,6 +258,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddItemToOrder(childComplexity, args["order"].(int), args["products"].([]int)), true
 
+	case "Mutation.applyPayment":
+		if e.complexity.Mutation.ApplyPayment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_applyPayment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ApplyPayment(childComplexity, args["input"].(AddPaymentInput)), true
+
 	case "Mutation.closeOrder":
 		if e.complexity.Mutation.CloseOrder == nil {
 			break
@@ -336,6 +363,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Order.Items(childComplexity), true
 
+	case "Order.payments":
+		if e.complexity.Order.Payments == nil {
+			break
+		}
+
+		return e.complexity.Order.Payments(childComplexity), true
+
 	case "Order.server":
 		if e.complexity.Order.Server == nil {
 			break
@@ -377,6 +411,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrderItem.Products(childComplexity), true
+
+	case "Payment.amount":
+		if e.complexity.Payment.Amount == nil {
+			break
+		}
+
+		return e.complexity.Payment.Amount(childComplexity), true
+
+	case "Payment.id":
+		if e.complexity.Payment.ID == nil {
+			break
+		}
+
+		return e.complexity.Payment.ID(childComplexity), true
+
+	case "Payment.order":
+		if e.complexity.Payment.Order == nil {
+			break
+		}
+
+		return e.complexity.Payment.Order(childComplexity), true
+
+	case "Payment.timestamp":
+		if e.complexity.Payment.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.Payment.Timestamp(childComplexity), true
 
 	case "Product.category":
 		if e.complexity.Product.Category == nil {
@@ -689,6 +751,7 @@ type Order {
     table: Table!
     server: Server!
     items: [OrderItem!]!
+    payments: [Payment!]!
 }
 
 type Table {
@@ -709,6 +772,13 @@ type OrderItem {
     id: ID!
     products: [Product!]!
     order: Order!
+}
+
+type Payment {
+    id: ID!
+    order: Order!
+    amount: Int!
+    timestamp: Time!
 }
 
 enum OrderStatus {
@@ -751,6 +821,11 @@ input NewOrder {
     server: ID!
 }
 
+input AddPaymentInput{
+    order: ID!
+    amount: Int!
+}
+
 type Mutation {
     createProduct(p: NewProduct!): Product!
     createCategory(name: String!): Category!
@@ -760,6 +835,7 @@ type Mutation {
     startOrder(o: NewOrder!): Order!
     closeOrder(id: ID!): Order!
     addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
+    applyPayment(input: AddPaymentInput!): Payment
 }
 `},
 )
@@ -787,6 +863,20 @@ func (ec *executionContext) field_Mutation_addItemToOrder_args(ctx context.Conte
 		}
 	}
 	args["products"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_applyPayment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 AddPaymentInput
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNAddPaymentInput2koalaᚗposᚋsrcᚋgraphqlᚐAddPaymentInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1610,6 +1700,47 @@ func (ec *executionContext) _Mutation_addItemToOrder(ctx context.Context, field 
 	return ec.marshalNOrderItem2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOrderItem(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_applyPayment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_applyPayment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ApplyPayment(rctx, args["input"].(AddPaymentInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Payment)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPayment2ᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Order_id(ctx context.Context, field graphql.CollectedField, obj *models.Order) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1829,6 +1960,43 @@ func (ec *executionContext) _Order_items(ctx context.Context, field graphql.Coll
 	return ec.marshalNOrderItem2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐOrderItem(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Order_payments(ctx context.Context, field graphql.CollectedField, obj *models.Order) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Order",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Order().Payments(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Payment)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPayment2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _OrderItem_id(ctx context.Context, field graphql.CollectedField, obj *models.OrderItem) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1938,6 +2106,154 @@ func (ec *executionContext) _OrderItem_order(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNOrder2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOrder(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Payment_id(ctx context.Context, field graphql.CollectedField, obj *models.Payment) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Payment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Payment_order(ctx context.Context, field graphql.CollectedField, obj *models.Payment) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Payment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Payment().Order(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Order)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNOrder2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOrder(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Payment_amount(ctx context.Context, field graphql.CollectedField, obj *models.Payment) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Payment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Amount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Payment_timestamp(ctx context.Context, field graphql.CollectedField, obj *models.Payment) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Payment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Product_id(ctx context.Context, field graphql.CollectedField, obj *models.Product) (ret graphql.Marshaler) {
@@ -4156,6 +4472,30 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddPaymentInput(ctx context.Context, obj interface{}) (AddPaymentInput, error) {
+	var it AddPaymentInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "order":
+			var err error
+			it.Order, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "amount":
+			var err error
+			it.Amount, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewOrder(ctx context.Context, obj interface{}) (NewOrder, error) {
 	var it NewOrder
 	var asMap = obj.(map[string]interface{})
@@ -4377,6 +4717,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "applyPayment":
+			out.Values[i] = ec._Mutation_applyPayment(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4453,6 +4795,20 @@ func (ec *executionContext) _Order(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
+		case "payments":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Order_payments(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4508,6 +4864,57 @@ func (ec *executionContext) _OrderItem(ctx context.Context, sel ast.SelectionSet
 				}
 				return res
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var paymentImplementors = []string{"Payment"}
+
+func (ec *executionContext) _Payment(ctx context.Context, sel ast.SelectionSet, obj *models.Payment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, paymentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Payment")
+		case "id":
+			out.Values[i] = ec._Payment_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "order":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Payment_order(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "amount":
+			out.Values[i] = ec._Payment_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "timestamp":
+			out.Values[i] = ec._Payment_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5086,6 +5493,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAddPaymentInput2koalaᚗposᚋsrcᚋgraphqlᚐAddPaymentInput(ctx context.Context, v interface{}) (AddPaymentInput, error) {
+	return ec.unmarshalInputAddPaymentInput(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -5367,6 +5778,57 @@ func (ec *executionContext) marshalNOrderItem2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOr
 		return graphql.Null
 	}
 	return ec._OrderItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPayment2koalaᚗposᚋsrcᚋmodelsᚐPayment(ctx context.Context, sel ast.SelectionSet, v models.Payment) graphql.Marshaler {
+	return ec._Payment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPayment2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx context.Context, sel ast.SelectionSet, v []*models.Payment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPayment2ᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNPayment2ᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx context.Context, sel ast.SelectionSet, v *models.Payment) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Payment(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNProduct2koalaᚗposᚋsrcᚋmodelsᚐProduct(ctx context.Context, sel ast.SelectionSet, v models.Product) graphql.Marshaler {
@@ -5863,6 +6325,17 @@ func (ec *executionContext) marshalOOrderStatus2ᚖkoalaᚗposᚋsrcᚋgraphql�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOPayment2koalaᚗposᚋsrcᚋmodelsᚐPayment(ctx context.Context, sel ast.SelectionSet, v models.Payment) graphql.Marshaler {
+	return ec._Payment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPayment2ᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx context.Context, sel ast.SelectionSet, v *models.Payment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Payment(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOProduct2koalaᚗposᚋsrcᚋmodelsᚐProduct(ctx context.Context, sel ast.SelectionSet, v models.Product) graphql.Marshaler {
