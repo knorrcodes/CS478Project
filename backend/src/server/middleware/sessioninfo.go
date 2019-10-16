@@ -7,7 +7,7 @@ import (
 	"koala.pos/src/models/stores"
 )
 
-func SetSessionInfo(next http.Handler, e *common.Environment, storeColl *stores.StoreCollection) http.Handler {
+func SetSessionInfo(e *common.Environment, storeColl *stores.StoreCollection, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r = common.SetEnvironmentToContext(r, e)
 		r = stores.SetStoreCollectionToContext(r, storeColl)

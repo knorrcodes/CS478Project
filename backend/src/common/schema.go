@@ -45,7 +45,7 @@ var (
 
 	TableTableCols = []string{
 		"id",
-		"num",
+		"table_num",
 	}
 
 	CustCodeTableCols = []string{

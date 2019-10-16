@@ -29,6 +29,7 @@ func newDBConnector() *database {
 		"cust_code":  m.createCustCodeTable,
 		"order_item": m.createOrderItemTable,
 		"settings":   m.createSettingTable,
+		"payment":    m.createPaymentTable,
 	}
 
 	m.migrateFuncs = []migrateFunc{}
@@ -60,6 +61,7 @@ func (m *database) connect(d *common.DatabaseAccessor, c *common.Config) error {
 	mc.Net = "tcp"
 	mc.Addr = fmt.Sprintf("%s:%d", c.Database.Address, c.Database.Port)
 	mc.DBName = c.Database.Name
+	mc.ParseTime = true
 
 	var err error
 	d.DB, err = sql.Open("mysql", mc.FormatDSN())
@@ -80,7 +82,7 @@ func (m *database) connect(d *common.DatabaseAccessor, c *common.Config) error {
 	}
 
 	if !strings.Contains(mode, "ANSI") {
-		return errors.New("MySQL must be in ANSI mode. Please set the global mode or edit the my.cnf file to enable ANSI sql_mode.")
+		return errors.New("mySQL must be in ANSI mode. Please set the global mode or edit the my.cnf file to enable ANSI sql_mode")
 	}
 	return nil
 }
@@ -267,8 +269,8 @@ func (m *database) createServerTable(d *common.DatabaseAccessor) error {
 func (m *database) createOrderTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "order" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-		"starttime" DATETIME NOT NULL,
-		"endtime" DATETIME NOT NULL,
+		"starttime" INT UNSIGNED NOT NULL DEFAULT (0),
+		"endtime" INT UNSIGNED NOT NULL DEFAULT (0),
 		"table_id" INT NOT NULL,
 		"server_id" INT NOT NULL,
 		INDEX ("table_id", "server_id")
@@ -296,8 +298,8 @@ func (m *database) createTableTable(d *common.DatabaseAccessor) error {
 func (m *database) createCustCodeTable(d *common.DatabaseAccessor) error {
 	sql := `CREATE TABLE "cust_code" (
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-		"starttime" DATETIME NOT NULL,
-		"endtime" DATETIME NOT NULL,
+		"starttime" INT UNSIGNED NOT NULL DEFAULT (0),
+		"endtime" INT UNSIGNED NOT NULL DEFAULT (0),
 		"code" TINYTEXT NOT NULL,
 		"order_id" INT NOT NULL,
 		INDEX ("order_id")
@@ -311,6 +313,18 @@ func (m *database) createOrderItemTable(d *common.DatabaseAccessor) error {
 		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 		"products" JSON NOT NULL,
 		"order_id" INT NOT NULL,
+		INDEX ("order_id")
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
+	_, err := d.DB.Exec(sql)
+	return err
+}
+
+func (m *database) createPaymentTable(d *common.DatabaseAccessor) error {
+	sql := `CREATE TABLE "payment" (
+		"id" INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		"order_id" INT NOT NULL,
+		"amount" INT NOT NULL,
+		"timestamp" INT UNSIGNED NOT NULL DEFAULT (0),
 		INDEX ("order_id")
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1`
 	_, err := d.DB.Exec(sql)

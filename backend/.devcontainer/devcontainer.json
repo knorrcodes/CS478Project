@@ -1,0 +1,50 @@
+{
+	"name": "Go",
+	"dockerComposeFile": ["../docker/docker-compose.yml", "docker-compose.extend.yml"],
+	"service": "pos-backend",
+	"workspaceFolder": "/workspace/backend",
+	"shutdownAction": "stopCompose",
+
+	"appPort": [8080],
+
+	"runArgs": [
+		"--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"
+	],
+
+    "settings": {
+        "go.useLanguageServer": true,
+        "go.autocompleteUnimportedPackages": true,
+        "[go]": {
+            "editor.snippetSuggestions": "none",
+            "editor.formatOnSave": true,
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": true
+            }
+        },
+        "gopls": {
+            "usePlaceholders": true,
+            "completeUnimported": true,
+            "watchChangedFiles": true,
+            "deepCompletion": true
+        },
+        "files.eol": "\n"
+    },
+
+	"postCreateCommand": "go mod download",
+
+	"extensions": [
+		"2gua.rainbow-brackets",
+        "asuka.insertnumbers",
+        "bibhasdn.unique-lines",
+        "britesnow.vscode-toggle-quotes",
+        "bungcip.better-toml",
+        "jsynowiec.vscode-insertdatestring",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.go",
+        "nmsmith89.incrementor",
+        "oderwat.indent-rainbow",
+        "prisma.vscode-graphql",
+        "richie5um2.vscode-sort-json",
+        "stkb.rewrap"
+	]
+}
