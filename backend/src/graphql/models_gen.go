@@ -2,20 +2,71 @@
 
 package graphql
 
-type InputID struct {
-	ID int `json:"id"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type AddPaymentInput struct {
+	Order  int `json:"order"`
+	Amount int `json:"amount"`
 }
 
-type NewCategory struct {
-	Name string `json:"name"`
+type NewOrder struct {
+	Table  int `json:"table"`
+	Server int `json:"server"`
 }
 
 type NewProduct struct {
-	Name       string   `json:"name"`
-	Desc       *string  `json:"desc"`
-	Picture    *string  `json:"picture"`
-	Price      int      `json:"price"`
-	Category   *InputID `json:"category"`
-	Wscost     int      `json:"wscost"`
-	NumOfSides *int     `json:"num_of_sides"`
+	Name       string  `json:"name"`
+	Desc       *string `json:"desc"`
+	Picture    *string `json:"picture"`
+	Price      int     `json:"price"`
+	Category   int     `json:"category"`
+	Wscost     int     `json:"wscost"`
+	NumOfSides *int    `json:"num_of_sides"`
+}
+
+type OrderStatus string
+
+const (
+	OrderStatusAny    OrderStatus = "ANY"
+	OrderStatusOpened OrderStatus = "OPENED"
+	OrderStatusClosed OrderStatus = "CLOSED"
+)
+
+var AllOrderStatus = []OrderStatus{
+	OrderStatusAny,
+	OrderStatusOpened,
+	OrderStatusClosed,
+}
+
+func (e OrderStatus) IsValid() bool {
+	switch e {
+	case OrderStatusAny, OrderStatusOpened, OrderStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e OrderStatus) String() string {
+	return string(e)
+}
+
+func (e *OrderStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderStatus", str)
+	}
+	return nil
+}
+
+func (e OrderStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

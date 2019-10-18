@@ -9,7 +9,9 @@ type Key int
 
 // Session values keys
 const (
-	SessionEnvKey Key = 1
+	SessionEnvKey      Key = 1
+	StoreCollectionKey Key = 2
+	AuthServerKey      Key = 3
 )
 
 // Environment

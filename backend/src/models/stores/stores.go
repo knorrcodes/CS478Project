@@ -7,19 +7,21 @@ import (
 	"koala.pos/src/common"
 )
 
+// StoreCollection of structures
 type StoreCollection struct {
-	Product  ProductStore
-	Category CategoryStore
+	Product   ProductStore
+	Category  CategoryStore
+	Server    ServerStore
+	Table     TableStore
+	CustCode  CustCodeStore
+	Order     OrderStore
+	OrderItem OrderItemStore
+	Payment   PaymentStore
 }
-
-// Session values keys
-const (
-	StoreCollectionKey common.Key = 1
-)
 
 // GetStoreCollectionFromContext retrieves the StoreCollection from the current request.
 func GetStoreCollectionFromContext(ctx context.Context) *StoreCollection {
-	if rv := ctx.Value(StoreCollectionKey); rv != nil {
+	if rv := ctx.Value(common.StoreCollectionKey); rv != nil {
 		return rv.(*StoreCollection)
 	}
 	return nil
@@ -27,5 +29,5 @@ func GetStoreCollectionFromContext(ctx context.Context) *StoreCollection {
 
 // SetStoreCollectionToContext sets an StoreCollection for the current request.
 func SetStoreCollectionToContext(r *http.Request, e *StoreCollection) *http.Request {
-	return r.WithContext(context.WithValue(r.Context(), StoreCollectionKey, e))
+	return r.WithContext(context.WithValue(r.Context(), common.StoreCollectionKey, e))
 }

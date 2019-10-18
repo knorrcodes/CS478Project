@@ -25,22 +25,20 @@ func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Hand
 		r.HandlerFunc("GET", "/", handler.Playground("GraphQL playground", "/graphql"))
 		log.Info("GraphQL playground enabled")
 	}
-	r.Handler("POST", "/graphql", midStack(e, stores, handler.GraphQL(
-		graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
-	)))
+	r.Handler("POST", "/graphql",
+		mid.CheckAuthGraphQL(stores.Server,
+			mid.SetSessionInfo(e, stores,
+				handler.GraphQL(
+					graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
+				))))
 
 	if e.IsDev() {
-		r.Handler("GET", "/debug/*a", midStack(e, stores, debugRouter(e)))
+		r.Handler("GET", "/debug/*a", debugRouter(e))
 		log.Info("Profiling enabled")
 	}
 
 	h := mid.Logging(r, e) // Logging
 	h = mid.Panic(h, e)    // Panic catcher
-	return h
-}
-
-func midStack(e *common.Environment, stores *stores.StoreCollection, h http.Handler) http.Handler {
-	h = mid.SetSessionInfo(h, e, stores) // Adds Environment and user information to requet context
 	return h
 }
 

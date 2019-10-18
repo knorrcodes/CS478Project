@@ -1,0 +1,19 @@
+version: '3.6'
+services:
+  pos-backend:
+    image: golang-dev-image
+    build:
+      context: .
+      dockerfile: ../.devcontainer/Dockerfile
+    depends_on:
+      - pos-database
+    volumes:
+      - ../..:/workspace
+    ports:
+      - 8080:8080
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    working_dir: /workspace
+    command: /bin/sh -c "while sleep 1000; do :; done"
