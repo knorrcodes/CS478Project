@@ -86,7 +86,7 @@ type Query {
     order(id: ID = 0, table: ID = 0): Order
 }
 
-input NewProduct {
+input NewProductInput {
     name: String!
     desc: String
     picture: String
@@ -96,23 +96,22 @@ input NewProduct {
     num_of_sides: Int
 }
 
-input NewOrder {
+input NewOrderInput {
     table: ID!
-    server: ID!
 }
 
-input AddPaymentInput{
+input AddPaymentInput {
     order: ID!
     amount: Int!
 }
 
 type Mutation {
-    createProduct(p: NewProduct!): Product!
+    createProduct(input: NewProductInput!): Product!
     createCategory(name: String!): Category!
     createTable(num: Int!): Table!
     createCustCode(id: ID!): CustCode!
 
-    startOrder(o: NewOrder!): Order!
+    startOrder(input: NewOrderInput!): Order!
     closeOrder(id: ID!): Order!
     addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
     deleteOrderItem(id: ID!): Order!
