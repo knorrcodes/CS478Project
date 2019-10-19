@@ -219,3 +219,25 @@ func (r *mutationResolver) ApplyPayment(ctx context.Context, input AddPaymentInp
 
 	return payment, nil
 }
+
+func (r *mutationResolver) DeleteOrderItem(ctx context.Context, id int) (*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	orderItem, err := storeCollection.OrderItem.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := storeCollection.Order.GetOrderByID(orderItem.OrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := orderItem.Delete(); err != nil {
+		return nil, err
+	}
+	return order, nil
+}

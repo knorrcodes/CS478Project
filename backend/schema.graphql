@@ -14,6 +14,7 @@ type Product {
 type Category {
     id: ID!
     name: String!
+    products: [Product!]!
 }
 
 type Server {
@@ -36,7 +37,7 @@ type Order {
 type Table {
     id: ID!
     num: Int!
-    orders: [Order!]!
+    orders(status: OrderStatus = OPENED): [Order!]!
 }
 
 type CustCode {
@@ -114,5 +115,6 @@ type Mutation {
     startOrder(o: NewOrder!): Order!
     closeOrder(id: ID!): Order!
     addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
+    deleteOrderItem(id: ID!): Order!
     applyPayment(input: AddPaymentInput!): Payment
 }

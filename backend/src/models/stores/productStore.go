@@ -14,6 +14,7 @@ type ProductStore interface {
 	GetProducts() ([]*models.Product, error)
 	GetProductByID(id int) (*models.Product, error)
 	GetProductsByID(ids []int) ([]*models.Product, error)
+	GetProductsByCategory(id int) ([]*models.Product, error)
 	Save(p *models.Product) error
 	Delete(p *models.Product) error
 }
@@ -49,6 +50,24 @@ func (s *Product) GetProductByID(id int) (*models.Product, error) {
 	return products[0], err
 }
 
+// GetProductsByCategory function for productStore
+func (s *Product) GetProductsByCategory(id int) ([]*models.Product, error) {
+	if id <= 0 {
+		return nil, errors.New("Category ID required")
+	}
+
+	sql := `WHERE "category_id" = ?`
+	return s.getProductsFromDatabase(sql, id)
+}
+
+func intsToInterfaces(i []int) []interface{} {
+	ret := make([]interface{}, len(i))
+	for idx, v := range i {
+		ret[idx] = v
+	}
+	return ret
+}
+
 // GetProductsByID function for productStore
 func (s *Product) GetProductsByID(ids []int) ([]*models.Product, error) {
 	if len(ids) == 0 {
@@ -59,14 +78,6 @@ func (s *Product) GetProductsByID(ids []int) ([]*models.Product, error) {
 
 	sql := fmt.Sprintf(`WHERE "id" IN (%s)`, whereIn)
 	return s.getProductsFromDatabase(sql, intsToInterfaces(ids)...)
-}
-
-func intsToInterfaces(i []int) []interface{} {
-	ret := make([]interface{}, len(i))
-	for idx, v := range i {
-		ret[idx] = v
-	}
-	return ret
 }
 
 func (s *Product) getProductsFromDatabase(where string, values ...interface{}) ([]*models.Product, error) {
