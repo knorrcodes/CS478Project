@@ -11,8 +11,8 @@
             @keydown.enter.prevent="serverCodeCheck"
             type="number"
           />
-          <div v-if="isError">
-            <h4 class="errorMessage">{{error}}</h4>
+          <div v-if="error_msg">
+            <h4 class="errorMessage">{{error_msg}}</h4>
           </div>
           <br />
           <button
@@ -22,9 +22,6 @@
             @click="serverCodeCheck"
           >Enter</button>
         </form>
-        <div v-if="clicked">
-          <p>{{apiData}}</p>
-        </div>
       </div>
     </div>
   </div>
@@ -32,27 +29,44 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApiClass from "../api";
-import mainMenu from "./mainMenu.vue";
+import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
 
 @Component
-export default class loginScreen extends Vue {
+export default class LoginView extends Vue {
   private serverCode: Number = 0;
-  private apiData: String = "";
-  clicked: boolean = false;
-  private mainMenu = true;
-  private isError = false;
-  private error = "";
+  private error_msg = "";
 
-  private serverCodeCheck() {
-    if (this.serverCode == 478) {
-      console.log("code is valid");
-      this.$router.push({ name: "mainMenu" });
-    } else {
-      this.isError = true;
-      this.error = "code is not valid";
-      console.log("code is not valid");
+  beforeMount() {
+    if (localStorage.getItem("server-code")) {
+      this.$router.push({
+        path: "/"
+      });
     }
+  }
+
+  private async serverCodeCheck() {
+    let resp;
+    localStorage.setItem("server-code", this.serverCode.toString());
+
+    try {
+      resp = await this.$apollo.query({
+        query: GET_SERVER_QUERY,
+        variables: {
+          code: this.serverCode
+        }
+      });
+    } catch (e) {
+      localStorage.removeItem("server-code");
+
+      if (e.message.includes("401")) {
+        this.error_msg = "Invalid server code";
+      } else {
+        this.error_msg = "An error occured";
+      }
+      return;
+    }
+
+    this.$router.push({ path: "/" });
   }
 }
 </script>

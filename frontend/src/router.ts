@@ -1,71 +1,30 @@
-import Vue from 'vue';
-import Router from 'vue-router';
-import loginScreen from './components/loginScreen.vue';
-import mainMenu from './components/mainMenu.vue';
-import chickenMenu from './components/entreeItems/chickenMenu.vue';
-import sideMenu from './components/sideMenu.vue';
-import apatizerMenu from './components/entreeItems/apatizerMenu.vue';
-import burgerMenu from './components/entreeItems/burgerMenu.vue';
-import dessertMenu from './components/entreeItems/dessertMenu.vue';
-import fishMenu from './components/entreeItems/fishMenu.vue';
-import steakMenu from './components/entreeItems/steakMenu.vue';
-import drinkMenu from './components/drinkMenu.vue';
+import Vue from "vue";
+import Router from "vue-router";
+import LoginView from "@/views/Login.vue";
+import MainMenu from "@/views/MainMenu.vue";
+import CategoryView from "@/views/Category.vue";
 
 Vue.use(Router);
 
 export default new Router({
-  mode: 'history',
+  mode: "history",
   base: process.env.BASE_URL,
   routes: [
     {
-      path: '/',
-      name: 'loginScreen',
-      component: loginScreen,
+      path: "/",
+      name: "mainMenu",
+      component: MainMenu
     },
     {
-      path: '/mainMenu',
-      name: 'mainMenu',
-      component: mainMenu,
+      path: "/login",
+      name: "loginScreen",
+      component: LoginView,
+      meta: { layout: "empty" }
     },
     {
-      path: '/chickenMenu',
-      name: 'chickenMenu',
-      component: chickenMenu,
-    },
-    {
-      path: '/sideMenu',
-      name: 'sideMenu',
-      component: sideMenu,
-    },
-    {
-      path: '/apatizerMenu',
-      name: 'apatizerMenu',
-      component: apatizerMenu,
-    },
-    {
-      path: '/burgerMenu',
-      name: 'burgerMenu',
-      component: burgerMenu,
-    },
-    {
-      path: '/dessertMenu',
-      name: 'dessertMenu',
-      component: dessertMenu,
-    },
-    {
-      path: '/fishMenu',
-      name: 'fishMenu',
-      component: fishMenu,
-    },
-    {
-      path: '/steakMenu',
-      name: 'steakMenu',
-      component: steakMenu,
-    },
-    {
-      path: '/drinkMenu',
-      name: 'drinkMenu',
-      component: drinkMenu,
-    },
-  ],
+      path: "/cat/:id",
+      name: "category",
+      component: CategoryView
+    }
+  ]
 });
