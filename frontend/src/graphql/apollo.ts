@@ -53,7 +53,7 @@ export const apolloClient = new ApolloClient({
 
 cache.writeData({
   data: {
-    currentTable: 1
+    currentTable: null
   }
 });
 

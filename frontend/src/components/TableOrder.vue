@@ -2,47 +2,49 @@
   <div class="ticketOrder">
     <h3>Table Order</h3>
 
-    <span v-if="!currentTableId">No open order for table</span>
+    <section>
+      <section class="order-item" v-for="item in currentOrder.items" v-bind:key="item.id">
+        <section
+          class="order-item-product"
+          v-for="product in item.products"
+          v-bind:key="product.id"
+        >
+          <strong>{{ product.name }}</strong>
+          <span>{{ formatPrice(product.price) }}</span>
+        </section>
+      </section>
+    </section>
+
+    <section class="order-total-section">
+      <strong>Total</strong>
+      <span class="total-cost">{{ totalCost }}</span>
+    </section>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
-import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
-import { GET_LATEST_ORDER_QUERY } from "@/graphql/queries/orderQueries";
 
-@Component({
-  apollo: {
-    current_order: {
-      query: GET_LATEST_ORDER_QUERY,
-      variables() {
-        return {
-          table: this.currentTableId
-        };
-      },
-      update: data => {
-        if (data.table.orders.length > 0) {
-          return data.table.orders[0];
-        }
-        return null;
-      },
-      pollInterval: 2000
-    }
-  }
-})
+@Component
 export default class TableOrder extends Vue {
-  private currentTableId: number | null = null;
+  @Prop() private readonly currentOrder: any;
 
-  public async mounted() {
-    const resp = await this.$apollo.query({
-      query: GET_CURRENT_TABLE
-    });
+  private formatPrice(cents: number): string {
+    return `\$${(cents / 100).toFixed(2)}`;
+  }
 
-    this.currentTableId = resp.data.currentTable;
-    console.log(this.currentTableId);
-    if (!this.currentTableId) {
-      this.$apollo.queries.current_order.stop();
-    }
+  private get totalCost(): string {
+    const cost = this.currentOrder.items.reduce(
+      (acc: number, item: any) =>
+        acc +
+        item.products.reduce(
+          (acc: number, product: any) => acc + product.price,
+          0
+        ),
+      0
+    );
+
+    return this.formatPrice(cost);
   }
 }
 </script>
@@ -53,7 +55,24 @@ h3 {
 }
 
 .ticketOrder {
-  border-radius: 25px;
+  padding: 1rem 2rem;
+  border-radius: 10px;
   border: 2px solid;
+}
+
+.order-item-product {
+  display: flex;
+  justify-content: space-between;
+}
+
+.order-total-section {
+  border-top: dotted black 2px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.total-cost {
+  font-weight: bolder;
+  text-align: right;
 }
 </style>

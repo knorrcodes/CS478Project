@@ -32,6 +32,8 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
 
+const NEXT_PAGE_URL = "/tables";
+
 @Component
 export default class LoginView extends Vue {
   private serverCode: number = 0;
@@ -40,7 +42,7 @@ export default class LoginView extends Vue {
   public beforeMount() {
     if (localStorage.getItem("server-code")) {
       this.$router.push({
-        path: "/"
+        path: NEXT_PAGE_URL
       });
     }
   }
@@ -67,7 +69,7 @@ export default class LoginView extends Vue {
       return;
     }
 
-    this.$router.push({ path: "/" });
+    this.$router.push({ path: NEXT_PAGE_URL });
   }
 }
 </script>

@@ -20,6 +20,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQueries";
+import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
 
 @Component({
   apollo: {
@@ -28,16 +29,16 @@ import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQuer
       update: data => data.category,
       variables() {
         return {
-          id: this.$route.params.id
+          id: this.catId
         };
       }
     }
   }
 })
 export default class CategoryView extends Vue {
-  private addProductToOrder(productId: number) {
-    console.log(productId);
-  }
+  @Prop() private addProductToOrder: any;
+  @Prop() private readonly catId: any;
+  private categoryData: any = null;
 
   private goBack() {
     this.$router.back();

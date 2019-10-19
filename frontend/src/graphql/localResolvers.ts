@@ -9,11 +9,12 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Mutation: {
-    setCurrentTable: (_: any, { tableID }: any, { cache }: any) => {
+    setCurrentTable: (_: any, { id }: any, { cache }: any) => {
+      console.log(id);
       cache.writeQuery({
         query: GET_CURRENT_TABLE,
         data: {
-          tableID
+          currentTable: id
         }
       });
     }

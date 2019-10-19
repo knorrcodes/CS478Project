@@ -9,7 +9,7 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 
-const defaultLayout = "main";
+const defaultLayout = "empty";
 
 @Component
 export default class App extends Vue {
