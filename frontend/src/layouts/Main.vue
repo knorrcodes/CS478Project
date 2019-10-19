@@ -2,7 +2,7 @@
   <div class="home">
     <header>
       <img class="logoImage" src="@/assets/biglogo.png" alt="big team logo" />
-      <div>
+      <div class="logout-btn">
         <button type="button" @click="logout" class="btn btn-secondary mx-1 my-1">Logout</button>
       </div>
     </header>
@@ -47,6 +47,9 @@ header {
 
 .logoImage {
   margin-left: 5rem;
+}
+
+.logout-btn {
   margin-right: 5rem;
 }
 </style>

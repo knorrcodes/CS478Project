@@ -9,12 +9,12 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 
-const default_layout = "main";
+const defaultLayout = "main";
 
 @Component
 export default class App extends Vue {
   get layout() {
-    return (this.$route.meta.layout || default_layout) + "-layout";
+    return (this.$route.meta.layout || defaultLayout) + "-layout";
   }
 }
 </script>

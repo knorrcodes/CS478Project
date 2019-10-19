@@ -25,7 +25,7 @@ import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
     categories: GET_ALL_CATEGORIES_QUERIES
   }
 })
-export default class mainMenu extends Vue {}
+export default class MainMenu extends Vue {}
 </script>
 
 <style scoped>

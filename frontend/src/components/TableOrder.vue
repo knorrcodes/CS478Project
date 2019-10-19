@@ -2,7 +2,7 @@
   <div class="ticketOrder">
     <h3>Table Order</h3>
 
-    <span v-if="!current_table_id">No open order for table</span>
+    <span v-if="!currentTableId">No open order for table</span>
   </div>
 </template>
 
@@ -17,7 +17,7 @@ import { GET_LATEST_ORDER_QUERY } from "@/graphql/queries/orderQueries";
       query: GET_LATEST_ORDER_QUERY,
       variables() {
         return {
-          table: this.current_table_id
+          table: this.currentTableId
         };
       },
       update: data => {
@@ -26,21 +26,21 @@ import { GET_LATEST_ORDER_QUERY } from "@/graphql/queries/orderQueries";
         }
         return null;
       },
-      pollInterval: 500
+      pollInterval: 2000
     }
   }
 })
 export default class TableOrder extends Vue {
-  private current_table_id: number | null = null;
+  private currentTableId: number | null = null;
 
-  async mounted() {
+  public async mounted() {
     const resp = await this.$apollo.query({
       query: GET_CURRENT_TABLE
     });
 
-    this.current_table_id = resp.data.currentTable;
-    console.log(this.current_table_id);
-    if (!this.current_table_id) {
+    this.currentTableId = resp.data.currentTable;
+    console.log(this.currentTableId);
+    if (!this.currentTableId) {
       this.$apollo.queries.current_order.stop();
     }
   }

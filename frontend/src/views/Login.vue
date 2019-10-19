@@ -10,9 +10,10 @@
             v-model="serverCode"
             @keydown.enter.prevent="serverCodeCheck"
             type="number"
+            autofocus
           />
-          <div v-if="error_msg">
-            <h4 class="errorMessage">{{error_msg}}</h4>
+          <div v-if="errorMsg">
+            <h4 class="errorMessage">{{errorMsg}}</h4>
           </div>
           <br />
           <button
@@ -33,10 +34,10 @@ import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
 
 @Component
 export default class LoginView extends Vue {
-  private serverCode: Number = 0;
-  private error_msg = "";
+  private serverCode: number = 0;
+  private errorMsg = "";
 
-  beforeMount() {
+  public beforeMount() {
     if (localStorage.getItem("server-code")) {
       this.$router.push({
         path: "/"
@@ -59,9 +60,9 @@ export default class LoginView extends Vue {
       localStorage.removeItem("server-code");
 
       if (e.message.includes("401")) {
-        this.error_msg = "Invalid server code";
+        this.errorMsg = "Invalid server code";
       } else {
-        this.error_msg = "An error occured";
+        this.errorMsg = "An error occured";
       }
       return;
     }
