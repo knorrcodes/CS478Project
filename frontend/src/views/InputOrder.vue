@@ -3,7 +3,8 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <button @click="changeTables">Change Table</button>
+          <button class="btn btn-secondary mx-1 my-1" @click="changeTables">Change Table</button>
+          <button class="btn btn-secondary mx-1 my-1" @click="closeOrder">Close Order</button>
 
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
           <table-order v-else :currentOrder="currentOrder" />
@@ -103,6 +104,17 @@ export default class InputOrder extends Vue {
         input: {
           table: this.currentTableId
         }
+      }
+    });
+
+    this.$apollo.queries.currentOrder.refetch();
+  }
+
+  private async closeOrder() {
+    await this.$apollo.mutate({
+      mutation: CLOSE_ORDER_MUTATION,
+      variables: {
+        id: this.currentOrder.id
       }
     });
 
