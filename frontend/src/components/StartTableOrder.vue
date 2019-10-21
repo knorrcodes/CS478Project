@@ -3,7 +3,7 @@
     <h3>Table Order</h3>
 
     <div>
-      <button type="button" class="btn btn-secondary mx-1 my-1" @click="startNewOrder">Start Order</button>
+      <button type="button" class="btn btn-secondary mx-1 my-1" @click="startOrder">Start Order</button>
     </div>
   </div>
 </template>
@@ -14,18 +14,7 @@ import { START_NEW_ORDER_MUTATION } from "@/graphql/queries/orderQueries";
 
 @Component
 export default class TableOrder extends Vue {
-  @Prop() private readonly tableId: any;
-
-  public async startNewOrder() {
-    await this.$apollo.mutate({
-      mutation: START_NEW_ORDER_MUTATION,
-      variables: {
-        input: {
-          table: this.tableId
-        }
-      }
-    });
-  }
+  @Prop() private readonly startOrder: any;
 }
 </script>
 

@@ -5,7 +5,7 @@
         <div class="col-4 px-4">
           <button @click="changeTables">Change Table</button>
 
-          <start-table-order v-if="!currentOrder" :tableId="currentTableId"></start-table-order>
+          <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
           <table-order v-else :currentOrder="currentOrder" />
         </div>
 
@@ -31,7 +31,9 @@ import MainMenu from "@/views/MainMenu.vue";
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
 import {
   GET_LATEST_ORDER_QUERY,
-  ADD_ITEMS_TO_ORDER_MUTATION
+  ADD_ITEMS_TO_ORDER_MUTATION,
+  START_NEW_ORDER_MUTATION,
+  CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
 
 @Component({
@@ -88,6 +90,19 @@ export default class InputOrder extends Vue {
       variables: {
         order: this.currentOrder.id,
         products: [productId]
+      }
+    });
+
+    this.$apollo.queries.currentOrder.refetch();
+  }
+
+  private async startNewOrder() {
+    await this.$apollo.mutate({
+      mutation: START_NEW_ORDER_MUTATION,
+      variables: {
+        input: {
+          table: this.currentTableId
+        }
       }
     });
 
