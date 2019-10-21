@@ -10,7 +10,11 @@
             v-model="serverCode"
             @keydown.enter.prevent="serverCodeCheck"
             type="number"
+            autofocus
           />
+          <div v-if="errorMsg">
+            <h4 class="errorMessage">{{errorMsg}}</h4>
+          </div>
           <br />
           <button
             type="button"
@@ -18,13 +22,7 @@
             id="serverCodeButton"
             @click="serverCodeCheck"
           >Enter</button>
-          <br />
-          <br />
-          <button type="button" class="btn btn-primary" @click="getAllTestData">test data</button>
         </form>
-        <div v-if="clicked">
-          <p>{{apiData}}</p>
-        </div>
       </div>
     </div>
   </div>
@@ -32,20 +30,46 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApiClass from "../api";
+import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
+
+const NEXT_PAGE_URL = "/tables";
 
 @Component
-export default class loginScreen extends Vue {
-  private serverCode: Number = 0;
-  private apiData: String = "";
-  clicked: boolean = false;
+export default class LoginView extends Vue {
+  private serverCode: number = 0;
+  private errorMsg = "";
 
-  private serverCodeCheck() {
-    if (this.serverCode == 478) {
-      console.log("code is valid");
-    } else {
-      console.log("code is not valid");
+  public beforeMount() {
+    if (localStorage.getItem("server-code")) {
+      this.$router.push({
+        path: NEXT_PAGE_URL
+      });
     }
+  }
+
+  private async serverCodeCheck() {
+    let resp;
+    localStorage.setItem("server-code", this.serverCode.toString());
+
+    try {
+      resp = await this.$apollo.query({
+        query: GET_SERVER_QUERY,
+        variables: {
+          code: this.serverCode
+        }
+      });
+    } catch (e) {
+      localStorage.removeItem("server-code");
+
+      if (e.message.includes("401")) {
+        this.errorMsg = "Invalid server code";
+      } else {
+        this.errorMsg = "An error occured";
+      }
+      return;
+    }
+
+    this.$router.push({ path: NEXT_PAGE_URL });
   }
 }
 </script>
@@ -76,5 +100,10 @@ input[type="number"]::-webkit-outer-spin-button {
   -moz-appearance: none;
   appearance: none;
   margin: 0;
+}
+
+.errorMessage {
+  color: red;
+  text-transform: uppercase;
 }
 </style>

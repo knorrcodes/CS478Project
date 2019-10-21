@@ -43,6 +43,11 @@ func (r *Resolver) Table() TableResolver {
 	return &tableResolver{r}
 }
 
+// Category is the category resolver
+func (r *Resolver) Category() CategoryResolver {
+	return &categoryResolver{r}
+}
+
 // Query is the query resolver
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
@@ -115,13 +120,20 @@ func (r *orderResolver) Payments(ctx context.Context, obj *models.Order) ([]*mod
 
 type tableResolver struct{ *Resolver }
 
-func (r *tableResolver) Orders(ctx context.Context, obj *models.Table) ([]*models.Order, error) {
+func (r *tableResolver) Orders(ctx context.Context, obj *models.Table, status *OrderStatus) ([]*models.Order, error) {
 	storeCollection := stores.GetStoreCollectionFromContext(ctx)
 	if storeCollection == nil {
 		return nil, errors.New("Failed to get storage")
 	}
 
-	return storeCollection.Order.GetOrdersByTable(obj.ID, stores.OrderStatusAny)
+	ordStatus := stores.OrderStatusOpened
+	if *status == OrderStatusClosed {
+		ordStatus = stores.OrderStatusClosed
+	} else if *status == OrderStatusAny {
+		ordStatus = stores.OrderStatusAny
+	}
+
+	return storeCollection.Order.GetOrdersByTable(obj.ID, ordStatus)
 }
 
 type orderItemResolver struct{ *Resolver }
@@ -153,4 +165,15 @@ func (r *paymentResolver) Order(ctx context.Context, obj *models.Payment) (*mode
 	}
 
 	return storeCollection.Order.GetOrderByID(obj.OrderID)
+}
+
+type categoryResolver struct{ *Resolver }
+
+func (r *categoryResolver) Products(ctx context.Context, obj *models.Category) ([]*models.Product, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.Product.GetProductsByCategory(obj.ID)
 }

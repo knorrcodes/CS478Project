@@ -15,7 +15,7 @@ import (
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) CreateProduct(ctx context.Context, input NewProduct) (*models.Product, error) {
+func (r *mutationResolver) CreateProduct(ctx context.Context, input NewProductInput) (*models.Product, error) {
 	server := auth.GetServerFromContext(ctx)
 	if server == nil {
 		return nil, errors.New("Failed to check permissions")
@@ -125,7 +125,7 @@ func (r *mutationResolver) CreateCustCode(ctx context.Context, orderID int) (*mo
 	return code, nil
 }
 
-func (r *mutationResolver) StartOrder(ctx context.Context, o NewOrder) (*models.Order, error) {
+func (r *mutationResolver) StartOrder(ctx context.Context, input NewOrderInput) (*models.Order, error) {
 	// Any server can create a customer code
 
 	storeCollection := stores.GetStoreCollectionFromContext(ctx)
@@ -133,11 +133,13 @@ func (r *mutationResolver) StartOrder(ctx context.Context, o NewOrder) (*models.
 		return nil, errors.New("Failed to get storage")
 	}
 
+	server := auth.GetServerFromContext(ctx)
+
 	order := models.NewOrder(storeCollection.Order)
 	order.StartTime = time.Now()
 	order.EndTime = time.Unix(0, 0)
-	order.TableID = o.Table
-	order.ServerID = o.Server
+	order.TableID = input.Table
+	order.ServerID = server.ID
 
 	if err := order.Save(); err != nil {
 		return nil, err
@@ -218,4 +220,26 @@ func (r *mutationResolver) ApplyPayment(ctx context.Context, input AddPaymentInp
 	}
 
 	return payment, nil
+}
+
+func (r *mutationResolver) DeleteOrderItem(ctx context.Context, id int) (*models.Order, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	orderItem, err := storeCollection.OrderItem.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := storeCollection.Order.GetOrderByID(orderItem.OrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := orderItem.Delete(); err != nil {
+		return nil, err
+	}
+	return order, nil
 }

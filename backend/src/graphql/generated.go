@@ -36,6 +36,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Category() CategoryResolver
 	CustCode() CustCodeResolver
 	Mutation() MutationResolver
 	Order() OrderResolver
@@ -51,8 +52,9 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Category struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Products func(childComplexity int) int
 	}
 
 	CustCode struct {
@@ -64,14 +66,15 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddItemToOrder func(childComplexity int, order int, products []int) int
-		ApplyPayment   func(childComplexity int, input AddPaymentInput) int
-		CloseOrder     func(childComplexity int, id int) int
-		CreateCategory func(childComplexity int, name string) int
-		CreateCustCode func(childComplexity int, id int) int
-		CreateProduct  func(childComplexity int, p NewProduct) int
-		CreateTable    func(childComplexity int, num int) int
-		StartOrder     func(childComplexity int, o NewOrder) int
+		AddItemToOrder  func(childComplexity int, order int, products []int) int
+		ApplyPayment    func(childComplexity int, input AddPaymentInput) int
+		CloseOrder      func(childComplexity int, id int) int
+		CreateCategory  func(childComplexity int, name string) int
+		CreateCustCode  func(childComplexity int, id int) int
+		CreateProduct   func(childComplexity int, input NewProductInput) int
+		CreateTable     func(childComplexity int, num int) int
+		DeleteOrderItem func(childComplexity int, id int) int
+		StartOrder      func(childComplexity int, input NewOrderInput) int
 	}
 
 	Order struct {
@@ -132,21 +135,25 @@ type ComplexityRoot struct {
 	Table struct {
 		ID     func(childComplexity int) int
 		Num    func(childComplexity int) int
-		Orders func(childComplexity int) int
+		Orders func(childComplexity int, status *OrderStatus) int
 	}
 }
 
+type CategoryResolver interface {
+	Products(ctx context.Context, obj *models.Category) ([]*models.Product, error)
+}
 type CustCodeResolver interface {
 	Order(ctx context.Context, obj *models.CustCode) (*models.Order, error)
 }
 type MutationResolver interface {
-	CreateProduct(ctx context.Context, p NewProduct) (*models.Product, error)
+	CreateProduct(ctx context.Context, input NewProductInput) (*models.Product, error)
 	CreateCategory(ctx context.Context, name string) (*models.Category, error)
 	CreateTable(ctx context.Context, num int) (*models.Table, error)
 	CreateCustCode(ctx context.Context, id int) (*models.CustCode, error)
-	StartOrder(ctx context.Context, o NewOrder) (*models.Order, error)
+	StartOrder(ctx context.Context, input NewOrderInput) (*models.Order, error)
 	CloseOrder(ctx context.Context, id int) (*models.Order, error)
 	AddItemToOrder(ctx context.Context, order int, products []int) (*models.OrderItem, error)
+	DeleteOrderItem(ctx context.Context, id int) (*models.Order, error)
 	ApplyPayment(ctx context.Context, input AddPaymentInput) (*models.Payment, error)
 }
 type OrderResolver interface {
@@ -179,7 +186,7 @@ type QueryResolver interface {
 	Order(ctx context.Context, id *int, table *int) (*models.Order, error)
 }
 type TableResolver interface {
-	Orders(ctx context.Context, obj *models.Table) ([]*models.Order, error)
+	Orders(ctx context.Context, obj *models.Table, status *OrderStatus) ([]*models.Order, error)
 }
 
 type executableSchema struct {
@@ -210,6 +217,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Category.Name(childComplexity), true
+
+	case "Category.products":
+		if e.complexity.Category.Products == nil {
+			break
+		}
+
+		return e.complexity.Category.Products(childComplexity), true
 
 	case "CustCode.code":
 		if e.complexity.CustCode.Code == nil {
@@ -316,7 +330,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateProduct(childComplexity, args["p"].(NewProduct)), true
+		return e.complexity.Mutation.CreateProduct(childComplexity, args["input"].(NewProductInput)), true
 
 	case "Mutation.createTable":
 		if e.complexity.Mutation.CreateTable == nil {
@@ -330,6 +344,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateTable(childComplexity, args["num"].(int)), true
 
+	case "Mutation.deleteOrderItem":
+		if e.complexity.Mutation.DeleteOrderItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteOrderItem_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteOrderItem(childComplexity, args["id"].(int)), true
+
 	case "Mutation.startOrder":
 		if e.complexity.Mutation.StartOrder == nil {
 			break
@@ -340,7 +366,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StartOrder(childComplexity, args["o"].(NewOrder)), true
+		return e.complexity.Mutation.StartOrder(childComplexity, args["input"].(NewOrderInput)), true
 
 	case "Order.end_time":
 		if e.complexity.Order.EndTime == nil {
@@ -655,7 +681,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Table.Orders(childComplexity), true
+		args, err := ec.field_Table_orders_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Table.Orders(childComplexity, args["status"].(*OrderStatus)), true
 
 	}
 	return 0, false
@@ -735,6 +766,7 @@ type Product {
 type Category {
     id: ID!
     name: String!
+    products: [Product!]!
 }
 
 type Server {
@@ -757,7 +789,7 @@ type Order {
 type Table {
     id: ID!
     num: Int!
-    orders: [Order!]!
+    orders(status: OrderStatus = OPENED): [Order!]!
 }
 
 type CustCode {
@@ -806,7 +838,7 @@ type Query {
     order(id: ID = 0, table: ID = 0): Order
 }
 
-input NewProduct {
+input NewProductInput {
     name: String!
     desc: String
     picture: String
@@ -816,25 +848,25 @@ input NewProduct {
     num_of_sides: Int
 }
 
-input NewOrder {
+input NewOrderInput {
     table: ID!
-    server: ID!
 }
 
-input AddPaymentInput{
+input AddPaymentInput {
     order: ID!
     amount: Int!
 }
 
 type Mutation {
-    createProduct(p: NewProduct!): Product!
+    createProduct(input: NewProductInput!): Product!
     createCategory(name: String!): Category!
     createTable(num: Int!): Table!
     createCustCode(id: ID!): CustCode!
 
-    startOrder(o: NewOrder!): Order!
+    startOrder(input: NewOrderInput!): Order!
     closeOrder(id: ID!): Order!
     addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
+    deleteOrderItem(id: ID!): Order!
     applyPayment(input: AddPaymentInput!): Payment
 }
 `},
@@ -925,14 +957,14 @@ func (ec *executionContext) field_Mutation_createCustCode_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_createProduct_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 NewProduct
-	if tmp, ok := rawArgs["p"]; ok {
-		arg0, err = ec.unmarshalNNewProduct2koalaᚗposᚋsrcᚋgraphqlᚐNewProduct(ctx, tmp)
+	var arg0 NewProductInput
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNNewProductInput2koalaᚗposᚋsrcᚋgraphqlᚐNewProductInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["p"] = arg0
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -950,17 +982,31 @@ func (ec *executionContext) field_Mutation_createTable_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_startOrder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteOrderItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 NewOrder
-	if tmp, ok := rawArgs["o"]; ok {
-		arg0, err = ec.unmarshalNNewOrder2koalaᚗposᚋsrcᚋgraphqlᚐNewOrder(ctx, tmp)
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["o"] = arg0
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_startOrder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 NewOrderInput
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNNewOrderInput2koalaᚗposᚋsrcᚋgraphqlᚐNewOrderInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1100,6 +1146,20 @@ func (ec *executionContext) field_Query_table_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Table_orders_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *OrderStatus
+	if tmp, ok := rawArgs["status"]; ok {
+		arg0, err = ec.unmarshalOOrderStatus2ᚖkoalaᚗposᚋsrcᚋgraphqlᚐOrderStatus(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["status"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1208,6 +1268,43 @@ func (ec *executionContext) _Category_name(ctx context.Context, field graphql.Co
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Category_products(ctx context.Context, field graphql.CollectedField, obj *models.Category) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Category",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Category().Products(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Product)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNProduct2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐProduct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CustCode_id(ctx context.Context, field graphql.CollectedField, obj *models.CustCode) (ret graphql.Marshaler) {
@@ -1418,7 +1515,7 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateProduct(rctx, args["p"].(NewProduct))
+		return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(NewProductInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1594,7 +1691,7 @@ func (ec *executionContext) _Mutation_startOrder(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().StartOrder(rctx, args["o"].(NewOrder))
+		return ec.resolvers.Mutation().StartOrder(rctx, args["input"].(NewOrderInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1698,6 +1795,50 @@ func (ec *executionContext) _Mutation_addItemToOrder(ctx context.Context, field 
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNOrderItem2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOrderItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteOrderItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteOrderItem_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteOrderItem(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Order)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNOrder2ᚖkoalaᚗposᚋsrcᚋmodelsᚐOrder(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_applyPayment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3300,10 +3441,17 @@ func (ec *executionContext) _Table_orders(ctx context.Context, field graphql.Col
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Table_orders_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Table().Orders(rctx, obj)
+		return ec.resolvers.Table().Orders(rctx, obj, args["status"].(*OrderStatus))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4496,8 +4644,8 @@ func (ec *executionContext) unmarshalInputAddPaymentInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewOrder(ctx context.Context, obj interface{}) (NewOrder, error) {
-	var it NewOrder
+func (ec *executionContext) unmarshalInputNewOrderInput(ctx context.Context, obj interface{}) (NewOrderInput, error) {
+	var it NewOrderInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -4508,20 +4656,14 @@ func (ec *executionContext) unmarshalInputNewOrder(ctx context.Context, obj inte
 			if err != nil {
 				return it, err
 			}
-		case "server":
-			var err error
-			it.Server, err = ec.unmarshalNID2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj interface{}) (NewProduct, error) {
-	var it NewProduct
+func (ec *executionContext) unmarshalInputNewProductInput(ctx context.Context, obj interface{}) (NewProductInput, error) {
+	var it NewProductInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -4596,13 +4738,27 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 		case "id":
 			out.Values[i] = ec._Category_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Category_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "products":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Category_products(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4714,6 +4870,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "addItemToOrder":
 			out.Values[i] = ec._Mutation_addItemToOrder(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteOrderItem":
+			out.Values[i] = ec._Mutation_deleteOrderItem(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -5670,12 +5831,12 @@ func (ec *executionContext) marshalNInt2ᚕint(ctx context.Context, sel ast.Sele
 	return ret
 }
 
-func (ec *executionContext) unmarshalNNewOrder2koalaᚗposᚋsrcᚋgraphqlᚐNewOrder(ctx context.Context, v interface{}) (NewOrder, error) {
-	return ec.unmarshalInputNewOrder(ctx, v)
+func (ec *executionContext) unmarshalNNewOrderInput2koalaᚗposᚋsrcᚋgraphqlᚐNewOrderInput(ctx context.Context, v interface{}) (NewOrderInput, error) {
+	return ec.unmarshalInputNewOrderInput(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNNewProduct2koalaᚗposᚋsrcᚋgraphqlᚐNewProduct(ctx context.Context, v interface{}) (NewProduct, error) {
-	return ec.unmarshalInputNewProduct(ctx, v)
+func (ec *executionContext) unmarshalNNewProductInput2koalaᚗposᚋsrcᚋgraphqlᚐNewProductInput(ctx context.Context, v interface{}) (NewProductInput, error) {
+	return ec.unmarshalInputNewProductInput(ctx, v)
 }
 
 func (ec *executionContext) marshalNOrder2koalaᚗposᚋsrcᚋmodelsᚐOrder(ctx context.Context, sel ast.SelectionSet, v models.Order) graphql.Marshaler {

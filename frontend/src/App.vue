@@ -1,51 +1,26 @@
 <template>
   <div class="background" id="app">
-    <div>
-      <img class="logoImage" src="../../docs/biglogo.png" alt="biglogo" />
-    </div>
-    <div id="login"></div>
-    <login-screen />
-    {{apiData}}
+    <component :is="layout">
+      <router-view />
+    </component>
   </div>
 </template>
 
 <script>
-import loginScreen from "./components/loginScreen.vue";
-import ApiClass from "./api";
+import { Component, Vue } from "vue-property-decorator";
 
-const axios = require("axios");
+const defaultLayout = "empty";
 
-
-export default {
-  name: "app",
-  components: {
-    loginScreen
-  },
-  data() {
-    return {
-      apiData: null
-    };
+@Component
+export default class App extends Vue {
+  get layout() {
+    return (this.$route.meta.layout || defaultLayout) + "-layout";
   }
-  /*
-  mounted() {
-    axios
-      .get("https://api.coindesk.com/v1/bpi/currentprice.json")
-      .then(results => (this.apiData = results))
-      .catch(err => console.log(this.err));
-  } */
-};
+}
 </script>
 
 <style>
-.background {
-  background-color: rgb(255, 111, 111);
-  height: 100vh;
-}
-
-.logoImage {
-  height: 200;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+body {
+  background-color: rgb(255, 111, 111) !important;
 }
 </style>

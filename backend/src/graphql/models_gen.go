@@ -13,12 +13,11 @@ type AddPaymentInput struct {
 	Amount int `json:"amount"`
 }
 
-type NewOrder struct {
-	Table  int `json:"table"`
-	Server int `json:"server"`
+type NewOrderInput struct {
+	Table int `json:"table"`
 }
 
-type NewProduct struct {
+type NewProductInput struct {
 	Name       string  `json:"name"`
 	Desc       *string `json:"desc"`
 	Picture    *string `json:"picture"`
