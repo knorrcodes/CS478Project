@@ -1,0 +1,119 @@
+scalar Time
+
+type Product {
+    id: ID!
+    name: String!
+    desc: String!
+    picture: String
+    price: Int!
+    category: Category!
+    wscost: Int!
+    num_of_sides: Int!
+}
+
+type Category {
+    id: ID!
+    name: String!
+    products: [Product!]!
+}
+
+type Server {
+    id: ID!
+    name: String!
+    code: Int!
+    manager: Boolean!
+}
+
+type Order {
+    id: ID!
+    start_time: Time!
+    end_time: Time
+    table: Table!
+    server: Server!
+    items: [OrderItem!]!
+    payments: [Payment!]!
+}
+
+type Table {
+    id: ID!
+    num: Int!
+    orders(status: OrderStatus = OPENED): [Order!]!
+}
+
+type CustCode {
+    id: ID!
+    start_time: Time!
+    end_time: Time
+    code: String!
+    order: Order!
+}
+
+type OrderItem {
+    id: ID!
+    products: [Product!]!
+    order: Order!
+}
+
+type Payment {
+    id: ID!
+    order: Order!
+    amount: Int!
+    timestamp: Time!
+}
+
+enum OrderStatus {
+    ANY
+    OPENED
+    CLOSED
+}
+
+type Query {
+    product(id: ID!): Product
+    products: [Product!]!
+
+    category(id: ID!): Category
+    categories: [Category!]!
+
+    server(code: Int!): Server
+
+    table(id: ID!): Table
+    tables: [Table!]!
+
+    custcode(id: ID = 0, code: String = ""): CustCode
+    custcodes: [CustCode!]!
+
+    orders(server: ID = 0, status: OrderStatus = OPENED): [Order!]!
+    order(id: ID = 0, table: ID = 0): Order
+}
+
+input NewProductInput {
+    name: String!
+    desc: String
+    picture: String
+    price: Int!
+    category: ID!
+    wscost: Int!
+    num_of_sides: Int
+}
+
+input NewOrderInput {
+    table: ID!
+}
+
+input AddPaymentInput {
+    order: ID!
+    amount: Int!
+}
+
+type Mutation {
+    createProduct(input: NewProductInput!): Product!
+    createCategory(name: String!): Category!
+    createTable(num: Int!): Table!
+    createCustCode(id: ID!): CustCode!
+
+    startOrder(input: NewOrderInput!): Order!
+    closeOrder(id: ID!): Order!
+    addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
+    deleteOrderItem(id: ID!): Order!
+    applyPayment(input: AddPaymentInput!): Payment
+}

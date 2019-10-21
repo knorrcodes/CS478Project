@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch GraphQL Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/koala-pos/main.go",
+            "args": ["-d", "-c", "${workspaceFolder}/docker/config.toml"]
+        }
+    ]
+}
