@@ -16,8 +16,18 @@
     </section>
 
     <section class="order-total-section">
-      <strong>Total</strong>
-      <span class="total-cost">{{ totalCost }}</span>
+      <div>
+        <strong>Subtotal</strong>
+        <span class="total-cost">{{ formatPrice(subTotal) }}</span>
+      </div>
+      <div>
+        <strong>Tax</strong>
+        <span class="total-cost">{{ formatPrice(taxAmount) }}</span>
+      </div>
+      <div>
+        <strong>Total</strong>
+        <span class="total-cost">{{ formatPrice(subTotal + taxAmount) }}</span>
+      </div>
     </section>
   </div>
 </template>
@@ -33,7 +43,7 @@ export default class TableOrder extends Vue {
     return `\$${(cents / 100).toFixed(2)}`;
   }
 
-  private get totalCost(): string {
+  private get subTotal(): number {
     const cost = this.currentOrder.items.reduce(
       (acc: number, item: any) =>
         acc +
@@ -44,7 +54,11 @@ export default class TableOrder extends Vue {
       0
     );
 
-    return this.formatPrice(cost);
+    return cost;
+  }
+
+  private get taxAmount(): number {
+    return this.subTotal * 0.07;
   }
 }
 </script>
@@ -67,6 +81,9 @@ h3 {
 
 .order-total-section {
   border-top: dotted black 2px;
+}
+
+.order-total-section > div {
   display: flex;
   justify-content: space-between;
 }
