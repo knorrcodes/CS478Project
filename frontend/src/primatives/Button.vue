@@ -1,8 +1,6 @@
 <template>
-  <div class="grid-container">
-    <div class="grid-item">
-      <button class="btn bg mx-1 my-1" type="button" @click="clickHandler">{{value}}</button>
-    </div>
+  <div class="dspl">
+    <button class="btn bg mx-1 my-1" type="button" @click="clickHandler">{{value}}</button>
   </div>
 </template>
 
@@ -19,6 +17,10 @@ export default class Button extends Vue {
 <style scoped>
 .bg {
   background-color: #3678a8;
-  color: white;
+  color: black;
+  display: inline;
+}
+.dspl {
+  display: inline;
 }
 </style>

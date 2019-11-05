@@ -3,31 +3,16 @@
   <div v-else class="container text-center">
     <h1>{{ categoryData.name }} Menu</h1>
 
-    <button type="button" @click="goBack" class="btn btn-secondary mx-1 my-1">&lt;- Back</button>
+    <button-c :clickHandler="() => goBack()" value="&lt;- Back"></button-c>
 
     <section class="products">
-      <!--
-      <button
-        v-for="product in categoryData.products"
-        v-bind:key="product.id"
-        class="btn btn-secondary mx-1 my-1"
-        type="button"
-        @click="addProductToOrder(product.id)"
-      >{{ product.name }}</button>
-      
-      <button-c
-        v-for="product in categoryData.products"
-        v-bind:key="product.id"
-        :clickHandler="() => addProductToOrder(product.id)"
-      >{{product.name}}</button-c>
-      -->
-
       <router-c
         v-for="product in categoryData.products"
         v-bind:key="product.id"
         :clickHandler="() => addProductToOrder(product.id)"
-        :to="{path: '/cat/' + category.id}"
-      >{{product.name}}</router-c>
+        :value="product.name"
+        :to="{path: '/cat/' + 7}"
+      ></router-c>
     </section>
   </div>
 </template>
