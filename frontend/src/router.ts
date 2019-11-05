@@ -32,6 +32,6 @@ export default new Router({
       path: "/cat/:id",
       name: "category",
       component: InputOrderView
-    }
+    },
   ]
 });

@@ -6,6 +6,7 @@
     <button type="button" @click="goBack" class="btn btn-secondary mx-1 my-1">&lt;- Back</button>
 
     <section class="products">
+      <!--
       <button
         v-for="product in categoryData.products"
         v-bind:key="product.id"
@@ -13,6 +14,20 @@
         type="button"
         @click="addProductToOrder(product.id)"
       >{{ product.name }}</button>
+      
+      <button-c
+        v-for="product in categoryData.products"
+        v-bind:key="product.id"
+        :clickHandler="() => addProductToOrder(product.id)"
+      >{{product.name}}</button-c>
+      -->
+
+      <router-c
+        v-for="product in categoryData.products"
+        v-bind:key="product.id"
+        :clickHandler="() => addProductToOrder(product.id)"
+        :to="{path: '/cat/' + category.id}"
+      >{{product.name}}</router-c>
     </section>
   </div>
 </template>
@@ -21,8 +36,16 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQueries";
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
+import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
+
+import RouterC from "@/primatives/RouterLink.vue";
+import ButtonC from "@/primatives/Button.vue";
 
 @Component({
+  components: {
+    RouterC,
+    ButtonC
+  },
   apollo: {
     categoryData: {
       query: GET_PRODUCTS_IN_CATEGORY_QUERIES,
@@ -32,7 +55,8 @@ import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
           id: this.catId
         };
       }
-    }
+    },
+    categories: GET_ALL_CATEGORIES_QUERIES
   }
 })
 export default class CategoryView extends Vue {

@@ -4,12 +4,29 @@
       <h1>Categories</h1>
       <div class="row">
         <div class="col" align="center">
-          <router-link
+          <!-- 
+            <router-link
             v-for="category in categories"
             v-bind:key="category.id"
             class="btn btn-secondary mx-1 my-1"
             :to="{ path: '/cat/' + category.id }"
           >{{ category.name }}</router-link>
+          
+
+          <button-c
+            v-bind:key="category.id"
+            v-for="category in categories"
+            :value="category.name"
+            :clickHandler="() => test()"
+          ></button-c>
+          -->
+
+          <router-c
+            v-for="category in categories"
+            v-bind:key="category.id"
+            :value="category.name"
+            :to="{path: '/cat/' + category.id}"
+          ></router-c>
         </div>
       </div>
     </div>
@@ -19,10 +36,21 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
+import ButtonC from "@/primatives/Button.vue";
+import RouterC from "@/primatives/RouterLink.vue";
 
 @Component({
+  components: {
+    ButtonC,
+    RouterC
+  },
   apollo: {
     categories: GET_ALL_CATEGORIES_QUERIES
+  },
+  methods: {
+    test() {
+      console.log("hello");
+    }
   }
 })
 export default class MainMenu extends Vue {}

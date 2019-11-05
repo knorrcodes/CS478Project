@@ -26,6 +26,6 @@ h3 {
 .ticketOrder {
   padding: 1rem 2rem;
   border-radius: 10px;
-  border: 2px solid;
+  background: white;
 }
 </style>
