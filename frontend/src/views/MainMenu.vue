@@ -4,23 +4,6 @@
       <h1>Categories</h1>
       <div class="row">
         <div class="col" align="center">
-          <!-- 
-            <router-link
-            v-for="category in categories"
-            v-bind:key="category.id"
-            class="btn btn-secondary mx-1 my-1"
-            :to="{ path: '/cat/' + category.id }"
-          >{{ category.name }}</router-link>
-          
-
-          <button-c
-            v-bind:key="category.id"
-            v-for="category in categories"
-            :value="category.name"
-            :clickHandler="() => test()"
-          ></button-c>
-          -->
-
           <router-c
             v-for="category in categories"
             v-bind:key="category.id"

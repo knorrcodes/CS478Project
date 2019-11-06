@@ -72,6 +72,7 @@ h3 {
   padding: 1rem 2rem;
   border-radius: 10px;
   border: 2px solid;
+  background-color: white;
 }
 
 .order-item-product {

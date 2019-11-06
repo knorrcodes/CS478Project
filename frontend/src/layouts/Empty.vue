@@ -7,7 +7,7 @@
       </div>
     </header>
 
-    <div class="container">
+    <div class="format">
       <div class="row">
         <div class="col-12">
           <slot />
@@ -47,5 +47,11 @@ header {
 
 .logout-btn {
   margin-right: 5rem;
+}
+
+.format {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>

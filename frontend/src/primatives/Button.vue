@@ -18,8 +18,8 @@ export default class Button extends Vue {
 .bg {
   background-color: #3678a8;
   color: black;
-  display: inline;
 }
+
 .dspl {
   display: inline;
 }
