@@ -4,13 +4,17 @@
 
     <section>
       <section class="order-item" v-for="item in currentOrder.items" v-bind:key="item.id">
+        <section class="order-item-product">
+          <strong>{{ item.products[0].name }}</strong>
+          <span>{{ formatPrice(item.products[0].price) }}</span>
+        </section>
+
         <section
-          class="order-item-product"
-          v-for="product in item.products"
+          class="order-item-sub-product"
+          v-for="product in item.products.slice(1)"
           v-bind:key="product.id"
         >
-          <strong>{{ product.name }}</strong>
-          <span>{{ formatPrice(product.price) }}</span>
+          <span>{{ product.name }}</span>
         </section>
       </section>
     </section>
@@ -44,17 +48,10 @@ export default class TableOrder extends Vue {
   }
 
   private get subTotal(): number {
-    const cost = this.currentOrder.items.reduce(
-      (acc: number, item: any) =>
-        acc +
-        item.products.reduce(
-          (acc: number, product: any) => acc + product.price,
-          0
-        ),
+    return this.currentOrder.items.reduce(
+      (acc: number, item: any) => acc + item.products[0].price,
       0
     );
-
-    return cost;
   }
 
   private get taxAmount(): number {
@@ -78,6 +75,13 @@ h3 {
 .order-item-product {
   display: flex;
   justify-content: space-between;
+}
+
+.order-item-sub-product {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 10px;
+  /* font-weight: normal; */
 }
 
 .order-total-section {

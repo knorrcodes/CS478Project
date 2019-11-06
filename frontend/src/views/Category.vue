@@ -44,12 +44,31 @@ import ButtonStyled from "@/primatives/Button.vue";
   }
 })
 export default class CategoryView extends Vue {
-  @Prop() private addProductToOrder: any;
+  @Prop() private addProductToOrder:
+    | undefined
+    | ((productId: number, finished: boolean) => void);
   @Prop() private readonly catId: any;
   private categoryData: any = null;
 
   private goBack() {
     this.$router.back();
+  }
+
+  private addProductItem(id: number) {
+    if (!this.addProductToOrder) {
+      return;
+    }
+    const product = this.categoryData.products.find(
+      (item: any) => item.id === id
+    );
+
+    this.addProductToOrder(id, product.num_of_sides);
+
+    if (product.num_of_sides > 0) {
+      this.$router.push({
+        path: "/cat/7"
+      });
+    }
   }
 }
 </script>

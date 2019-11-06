@@ -68,6 +68,8 @@ import ButtonStyled from "@/primatives/Button.vue";
 export default class InputOrder extends Vue {
   private currentTableId: number | null = null;
   private currentOrder: any = null;
+  private currentOrderItem: number[] = [];
+  private currentOrderItemCount: number = 0;
 
   public async mounted() {
     const resp = await this.$apollo.query({
@@ -86,16 +88,29 @@ export default class InputOrder extends Vue {
     this.$apollo.queries.currentOrder.refetch();
   }
 
-  private async addProductToOrder(productId: number) {
+  private async addProductToOrder(productId: number, extraCount: number = 0) {
+    this.currentOrderItem.push(productId);
+
+    if (extraCount > 0) {
+      this.currentOrderItemCount = extraCount;
+    }
+
+    if (this.currentOrderItem.length !== this.currentOrderItemCount + 1) {
+      return;
+    }
+
     await this.$apollo.mutate({
       mutation: ADD_ITEMS_TO_ORDER_MUTATION,
       variables: {
         order: this.currentOrder.id,
-        products: [productId]
+        products: this.currentOrderItem
       }
     });
 
     this.$apollo.queries.currentOrder.refetch();
+
+    this.currentOrderItem = [];
+    this.currentOrderItemCount = 0;
   }
 
   private async startNewOrder() {

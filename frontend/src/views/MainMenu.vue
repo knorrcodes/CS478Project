@@ -36,7 +36,9 @@ import RouterLinkStyled from "@/primatives/RouterLink.vue";
     }
   }
 })
-export default class MainMenu extends Vue {}
+export default class MainMenu extends Vue {
+  private categories: any = null;
+}
 </script>
 
 <style scoped>
