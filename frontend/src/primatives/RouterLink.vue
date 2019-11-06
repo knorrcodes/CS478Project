@@ -8,7 +8,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 
 @Component
-export default class routerlink extends Vue {
+export default class RouterLinkStyled extends Vue {
   @Prop() private value: any;
   @Prop() private to: any;
 }

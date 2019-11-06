@@ -8,7 +8,7 @@
 import { Prop, Component, Vue } from "vue-property-decorator";
 
 @Component
-export default class Button extends Vue {
+export default class ButtonStyled extends Vue {
   @Prop() private clickHandler: any;
   @Prop() private value: any;
 }

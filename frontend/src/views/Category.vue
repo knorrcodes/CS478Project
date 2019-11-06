@@ -3,16 +3,15 @@
   <div v-else class="container text-center">
     <h1>{{ categoryData.name }} Menu</h1>
 
-    <button-c :clickHandler="() => goBack()" value="&lt;- Back"></button-c>
+    <button-styled :clickHandler="() => goBack()" value="&lt;- Back"></button-styled>
 
     <section class="products">
-      <router-c
+      <button-styled
         v-for="product in categoryData.products"
         v-bind:key="product.id"
-        :clickHandler="() => addProductToOrder(product.id)"
+        :clickHandler="() => addProductItem(product.id)"
         :value="product.name"
-        :to="{path: '/cat/' + 7}"
-      ></router-c>
+      ></button-styled>
     </section>
   </div>
 </template>
@@ -23,13 +22,13 @@ import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQuer
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
 import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
 
-import RouterC from "@/primatives/RouterLink.vue";
-import ButtonC from "@/primatives/Button.vue";
+import RouterLinkStyled from "@/primatives/RouterLink.vue";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   components: {
-    RouterC,
-    ButtonC
+    RouterLinkStyled,
+    ButtonStyled
   },
   apollo: {
     categoryData: {

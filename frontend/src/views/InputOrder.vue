@@ -3,8 +3,8 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <button-c :clickHandler="() => changeTables()" value="Change Table"></button-c>
-          <button-c :clickHandler="() =>closeOrder()" value="Close Order"></button-c>
+          <button-styled :clickHandler="() => changeTables()" value="Change Table"></button-styled>
+          <button-styled :clickHandler="() =>closeOrder()" value="Close Order"></button-styled>
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
           <table-order v-else :currentOrder="currentOrder" />
         </div>
@@ -35,7 +35,7 @@ import {
   START_NEW_ORDER_MUTATION,
   CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
-import ButtonC from "@/primatives/Button.vue";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   components: {
@@ -43,7 +43,7 @@ import ButtonC from "@/primatives/Button.vue";
     StartTableOrder,
     Category,
     MainMenu,
-    ButtonC
+    ButtonStyled
   },
   apollo: {
     currentOrder: {

@@ -4,12 +4,12 @@
       <h1>Categories</h1>
       <div class="row">
         <div class="col" align="center">
-          <router-c
+          <router-link-styled
             v-for="category in categories"
             v-bind:key="category.id"
             :value="category.name"
             :to="{path: '/cat/' + category.id}"
-          ></router-c>
+          ></router-link-styled>
         </div>
       </div>
     </div>
@@ -19,13 +19,13 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
-import ButtonC from "@/primatives/Button.vue";
-import RouterC from "@/primatives/RouterLink.vue";
+import ButtonStyled from "@/primatives/Button.vue";
+import RouterLinkStyled from "@/primatives/RouterLink.vue";
 
 @Component({
   components: {
-    ButtonC,
-    RouterC
+    ButtonStyled,
+    RouterLinkStyled
   },
   apollo: {
     categories: GET_ALL_CATEGORIES_QUERIES

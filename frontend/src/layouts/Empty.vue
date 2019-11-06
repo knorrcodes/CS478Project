@@ -3,7 +3,7 @@
     <header>
       <img class="logoImage" src="@/assets/biglogo.png" alt="big team logo" />
       <div class="logout-btn">
-        <button-c :clickHandler="logout" value="Logout"></button-c>
+        <button-styled :clickHandler="logout" value="Logout"></button-styled>
       </div>
     </header>
 
@@ -19,11 +19,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ButtonC from "@/primatives/Button.vue";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   components: {
-    ButtonC
+    ButtonStyled
   }
 })
 export default class Main extends Vue {
