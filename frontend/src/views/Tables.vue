@@ -4,12 +4,12 @@
       <h1>Tables</h1>
       <div class="row">
         <div class="col" align="center">
-          <button
+          <button-styled
             v-for="table in tables"
             v-bind:key="table.id"
-            class="btn btn-secondary btn-lg mx-1 my-1"
-            @click="setCurrentTable(table.id)"
-          >{{ table.num }}</button>
+            :clickHandler="() => setCurrentTable(table.id)"
+            :value="table.num"
+          ></button-styled>
         </div>
       </div>
     </div>
@@ -22,10 +22,14 @@ import {
   GET_ALL_TABLES_QUERY,
   SET_CURRENT_TABLE
 } from "@/graphql/queries/tableQueries";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   apollo: {
     tables: GET_ALL_TABLES_QUERY
+  },
+  components: {
+    ButtonStyled
   }
 })
 export default class TableView extends Vue {

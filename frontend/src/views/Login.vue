@@ -16,12 +16,11 @@
             <h4 class="errorMessage">{{errorMsg}}</h4>
           </div>
           <br />
-          <button
-            type="button"
-            class="btn btn-primary"
+          <button-styled
             id="serverCodeButton"
-            @click="serverCodeCheck"
-          >Enter</button>
+            :clickHandler="() => serverCodeCheck()"
+            value="Enter"
+          ></button-styled>
         </form>
       </div>
     </div>
@@ -31,10 +30,15 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
+import ButtonStyled from "@/primatives/Button.vue";
 
 const NEXT_PAGE_URL = "/tables";
 
-@Component
+@Component({
+  components: {
+    ButtonStyled
+  }
+})
 export default class LoginView extends Vue {
   private serverCode: number = 0;
   private errorMsg = "";

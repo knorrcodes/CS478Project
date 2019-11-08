@@ -3,11 +3,11 @@
     <header>
       <img class="logoImage" src="@/assets/biglogo.png" alt="big team logo" />
       <div class="logout-btn">
-        <button type="button" @click="logout" class="btn btn-secondary mx-1 my-1">Logout</button>
+        <button-styled :clickHandler="logout" value="Logout"></button-styled>
       </div>
     </header>
 
-    <div class="container">
+    <div class="format">
       <div class="row">
         <div class="col-12">
           <slot />
@@ -19,8 +19,13 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import ButtonStyled from "@/primatives/Button.vue";
 
-@Component
+@Component({
+  components: {
+    ButtonStyled
+  }
+})
 export default class Main extends Vue {
   private logout() {
     localStorage.removeItem("server-code");
@@ -42,5 +47,11 @@ header {
 
 .logout-btn {
   margin-right: 5rem;
+}
+
+.format {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>

@@ -3,7 +3,7 @@
     <h3>Table Order</h3>
 
     <div>
-      <button type="button" class="btn btn-secondary mx-1 my-1" @click="startOrder">Start Order</button>
+      <button-styled :clickHandler="() => startOrder()" value="Start Order"></button-styled>
     </div>
   </div>
 </template>
@@ -11,8 +11,13 @@
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
 import { START_NEW_ORDER_MUTATION } from "@/graphql/queries/orderQueries";
+import ButtonStyled from "@/primatives/Button.vue";
 
-@Component
+@Component({
+  components: {
+    ButtonStyled
+  }
+})
 export default class TableOrder extends Vue {
   @Prop() private readonly startOrder: any;
 }
@@ -26,6 +31,6 @@ h3 {
 .ticketOrder {
   padding: 1rem 2rem;
   border-radius: 10px;
-  border: 2px solid;
+  background: white;
 }
 </style>

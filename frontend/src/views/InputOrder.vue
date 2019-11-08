@@ -3,9 +3,8 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <button class="btn btn-secondary mx-1 my-1" @click="changeTables">Change Table</button>
-          <button class="btn btn-secondary mx-1 my-1" @click="closeOrder">Close Order</button>
-
+          <button-styled :clickHandler="() => changeTables()" value="Change Table"></button-styled>
+          <button-styled :clickHandler="() =>closeOrder()" value="Close Order"></button-styled>
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
           <table-order v-else :currentOrder="currentOrder" />
         </div>
@@ -36,13 +35,15 @@ import {
   START_NEW_ORDER_MUTATION,
   CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   components: {
     TableOrder,
     StartTableOrder,
     Category,
-    MainMenu
+    MainMenu,
+    ButtonStyled
   },
   apollo: {
     currentOrder: {
@@ -67,6 +68,8 @@ import {
 export default class InputOrder extends Vue {
   private currentTableId: number | null = null;
   private currentOrder: any = null;
+  private currentOrderItem: number[] = [];
+  private currentOrderItemCount: number = 0;
 
   public async mounted() {
     const resp = await this.$apollo.query({
@@ -85,16 +88,29 @@ export default class InputOrder extends Vue {
     this.$apollo.queries.currentOrder.refetch();
   }
 
-  private async addProductToOrder(productId: number) {
+  private async addProductToOrder(productId: number, extraCount: number = 0) {
+    this.currentOrderItem.push(productId);
+
+    if (extraCount > 0) {
+      this.currentOrderItemCount = extraCount;
+    }
+
+    if (this.currentOrderItem.length !== this.currentOrderItemCount + 1) {
+      return;
+    }
+
     await this.$apollo.mutate({
       mutation: ADD_ITEMS_TO_ORDER_MUTATION,
       variables: {
         order: this.currentOrder.id,
-        products: [productId]
+        products: this.currentOrderItem
       }
     });
 
     this.$apollo.queries.currentOrder.refetch();
+
+    this.currentOrderItem = [];
+    this.currentOrderItemCount = 0;
   }
 
   private async startNewOrder() {

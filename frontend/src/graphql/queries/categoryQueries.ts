@@ -18,6 +18,7 @@ export const GET_PRODUCTS_IN_CATEGORY_QUERIES = gql`
       products {
         id
         name
+        num_of_sides
       }
     }
   }

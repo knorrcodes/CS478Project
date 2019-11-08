@@ -21,6 +21,6 @@ export default class App extends Vue {
 
 <style>
 body {
-  background-color: rgb(255, 111, 111) !important;
+  background-color: lightgray !important;
 }
 </style>
