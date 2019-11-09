@@ -17,7 +17,7 @@ export default class ButtonStyled extends Vue {
 <style scoped>
 .bg {
   background-color: #3678a8;
-  color: black;
+  color: white;
 }
 
 .dspl {

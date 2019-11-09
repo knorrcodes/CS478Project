@@ -61,3 +61,14 @@ export const ADD_ITEMS_TO_ORDER_MUTATION = gql`
     }
   }
 `;
+
+export const APPLY_PAYMENT = gql`
+  mutation ApplyPayment($order: ID!, $amount: Int!) {
+    applyPayment(input: {
+      order: $order
+      amount: $amount
+    }){
+      id
+    }
+  }
+`;

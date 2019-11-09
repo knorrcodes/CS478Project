@@ -6,7 +6,7 @@
           <button-styled :clickHandler="() => changeTables()" value="Change Table"></button-styled>
           <button-styled :clickHandler="() =>closeOrder()" value="Close Order"></button-styled>
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
-          <table-order v-else :currentOrder="currentOrder" />
+          <table-order v-else :currentOrder="currentOrder" :refetchFunc="refetchOrder" />
         </div>
 
         <div class="col-8">
@@ -111,6 +111,10 @@ export default class InputOrder extends Vue {
 
     this.currentOrderItem = [];
     this.currentOrderItemCount = 0;
+  }
+
+  private refetchOrder() {
+    this.$apollo.queries.currentOrder.refetch();
   }
 
   private async startNewOrder() {
