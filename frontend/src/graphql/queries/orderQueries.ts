@@ -6,6 +6,10 @@ export const GET_LATEST_ORDER_QUERY = gql`
       num
       orders {
         id
+        cust_code {
+          id
+          code
+        }
         payments {
           id
           amount

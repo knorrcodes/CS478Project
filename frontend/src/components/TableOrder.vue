@@ -2,6 +2,14 @@
   <div class="ticketOrder">
     <h3>Table Order</h3>
 
+    <section v-if="currentOrder.cust_code" class="customer-code order-item-product" >
+      <strong>Code:</strong>
+      <span>{{ currentOrder.cust_code.code }}</span>
+    </section>
+    <section v-else class="customer-code" >
+      <button-styled value="Generate Code" :clickHandler="generateCustCode" />
+    </section>
+
     <section>
       <section v-for="item in currentOrder.items" v-bind:key="item.id">
         <section class="order-item-product">
@@ -63,6 +71,7 @@ import { Vue, Prop, Component } from "vue-property-decorator";
 import ButtonStyled from "@/primatives/Button.vue";
 import Dialog from "@/components/Dialog.vue";
 import { APPLY_PAYMENT } from "@/graphql/queries/orderQueries";
+import { GENERATE_CUST_CODE } from "@/graphql/queries/custCodeQueries";
 
 @Component({
   components: {
@@ -84,6 +93,17 @@ export default class TableOrder extends Vue {
       variables: {
         order: this.currentOrder.id,
         amount: amount * 100
+      }
+    });
+
+    this.refetchFunc();
+  }
+
+  private async generateCustCode() {
+    await this.$apollo.mutate({
+      mutation: GENERATE_CUST_CODE,
+      variables: {
+        order: this.currentOrder.id
       }
     });
 
