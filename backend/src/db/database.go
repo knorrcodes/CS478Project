@@ -199,8 +199,8 @@ func (m *database) createProductTable(d *common.DatabaseAccessor) error {
 		('Steak Salad', 1199, 2, 700, 1),
 
 		('Wild Salmon', 1399, 3, 399, 2),
-		('Catfish Dinner', 1199, 299, 0, 2),
-		('Grilled Shrimp', 1299, 299, 0, 2),
+		('Catfish Dinner', 1199, 3, 299, 2),
+		('Grilled Shrimp', 1299, 3, 299, 2),
 		('Lobster Tail', 1895, 3, 895, 2),
 
 		('All American Cheese Burger', 955, 4, 250, 1),
