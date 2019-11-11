@@ -10,6 +10,8 @@
     <div class="format">
       <div class="row">
         <div class="col-12">
+          <h1 class="text-center">Server Mode</h1>
+          <hr class="mb-4" />
           <slot />
         </div>
       </div>
@@ -39,19 +41,25 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: rgb(170, 170, 170);
+  margin-bottom: 2rem;
 }
 
 .logoImage {
-  margin-left: 5rem;
+  margin-left: 2rem;
+  height: 75px;
 }
 
 .logout-btn {
-  margin-right: 5rem;
+  margin-right: 2rem;
 }
 
 .format {
   width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+hr {
+  width: 80%;
 }
 </style>
