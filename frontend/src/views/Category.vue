@@ -1,7 +1,7 @@
 <template>
   <div v-if="$apollo.loading">Loading...</div>
   <div v-else class="container text-center">
-    <h1>{{ categoryData.name }} Menu</h1>
+    <h2>{{ categoryData.name }} Menu</h2>
 
     <button-styled :clickHandler="() => goBack()" value="&lt;- Back"></button-styled>
 

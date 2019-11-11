@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container text-center">
-      <h1>Categories</h1>
+      <h2>Categories</h2>
       <div class="row">
         <div class="col" align="center">
           <router-link-styled
@@ -30,6 +30,7 @@ import RouterLinkStyled from "@/primatives/RouterLink.vue";
   apollo: {
     categories: GET_ALL_CATEGORIES_QUERIES
   },
+
   methods: {
     test() {
       console.log("hello");
