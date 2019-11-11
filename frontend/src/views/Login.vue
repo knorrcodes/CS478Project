@@ -9,8 +9,8 @@
             class="form-control input1 textFormat"
             v-model="serverCode"
             @keydown.enter.prevent="serverCodeCheck"
-            type="number"
-            autofocus
+            type="text"
+            v-focus
           />
           <div v-if="errorMsg">
             <h4 class="errorMessage">{{errorMsg}}</h4>
@@ -40,7 +40,7 @@ const NEXT_PAGE_URL = "/tables";
   }
 })
 export default class LoginView extends Vue {
-  private serverCode: number = 0;
+  private serverCode: number|null = null;
   private errorMsg = "";
 
   public beforeMount() {

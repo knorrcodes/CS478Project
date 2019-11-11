@@ -189,40 +189,40 @@ func (m *database) createProductTable(d *common.DatabaseAccessor) error {
 	_, err := d.DB.Exec(`INSERT INTO "product"
 		("name", "price", "category_id", "ws_cost", "num_of_sides")
 		VALUES
-		('Teriyaki Chicken', 1250, 1, 0, 2),
-		('Grilled Chicken', 1150, 1, 0, 2),
-		('Chicken Salad', 899, 1, 0, 1),
-		('Chicken Tenders', 1099, 1, 0, 1),
+		('Teriyaki Chicken', 1250, 1, 250, 2),
+		('Grilled Chicken', 1150, 1, 150, 2),
+		('Chicken Salad', 899, 1, 100, 1),
+		('Chicken Tenders', 1099, 1, 300, 1),
 
-		('6oz Filet', 1199, 2, 0, 2),
-		('9oz Filet', 1499, 2, 0, 2),
-		('Steak Salad', 1199, 2, 0, 1),
+		('6oz Filet', 1199, 2, 400, 2),
+		('9oz Filet', 1499, 2, 600, 2),
+		('Steak Salad', 1199, 2, 700, 1),
 
-		('Wild Salmon', 1399, 3, 0, 2),
-		('Catfish Dinner', 1199, 3, 0, 2),
-		('Grilled Shrimp', 1299, 3, 0, 2),
-		('Lobster Tail', 1895, 3, 0, 2),
+		('Wild Salmon', 1399, 3, 399, 2),
+		('Catfish Dinner', 1199, 299, 0, 2),
+		('Grilled Shrimp', 1299, 299, 0, 2),
+		('Lobster Tail', 1895, 3, 895, 2),
 
-		('All American Cheese Burger', 955, 4, 0, 1),
-		('Bacon Cheese Burger', 1155, 4, 0, 1),
-		('Veggie Burger', 1095, 4, 0, 1),
+		('All American Cheese Burger', 955, 4, 250, 1),
+		('Bacon Cheese Burger', 1155, 4, 350, 1),
+		('Veggie Burger', 1095, 4, 450, 1),
 
-		('Fried Pickles', 815, 5, 0, 0),
-		('Mozzarella Sticks', 735, 5, 0, 0),
+		('Fried Pickles', 815, 5, 175, 0),
+		('Mozzarella Sticks', 735, 5, 135, 0),
 
-		('Epic Brownie', 650, 6, 0, 0),
-		('Fried Ice Cream', 550, 6, 0, 0),
+		('Epic Brownie', 650, 6, 200, 0),
+		('Fried Ice Cream', 550, 6, 150, 0),
 
-		('French Fries', 150, 7, 0, 0),
-		('Baked Potato', 150, 7, 0, 0),
-		('Broccoli', 150, 7, 0, 0),
-		('Rice', 150, 7, 0, 0),
-		('Asparagus', 150, 7, 0, 0),
+		('French Fries', 150, 7, 30, 0),
+		('Baked Potato', 150, 7, 30, 0),
+		('Broccoli', 150, 7, 45, 0),
+		('Rice', 150, 7, 25, 0),
+		('Asparagus', 150, 7, 25, 0),
 
-		('Coke', 200, 8, 0, 0),
-		('Tea', 200, 8, 0, 0),
-		('Water', 0, 8, 0, 0),
-		('Lemonaid', 200, 8, 0, 0)`)
+		('Coke', 200, 8, 35, 0),
+		('Tea', 200, 8, 45, 0),
+		('Water', 0, 8, 1, 0),
+		('Lemonaid', 200, 8, 45, 0)`)
 	return err
 }
 

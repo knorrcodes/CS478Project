@@ -32,6 +32,7 @@ type Order {
     server: Server!
     items: [OrderItem!]!
     payments: [Payment!]!
+    cust_code: CustCode
 }
 
 type Table {

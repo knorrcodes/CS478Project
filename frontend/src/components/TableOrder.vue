@@ -2,8 +2,16 @@
   <div class="ticketOrder">
     <h3>Table Order</h3>
 
+    <section v-if="currentOrder.cust_code" class="customer-code order-item-product" >
+      <strong>Code:</strong>
+      <span>{{ currentOrder.cust_code.code }}</span>
+    </section>
+    <section v-else class="customer-code" >
+      <button-styled value="Generate Code" :clickHandler="generateCustCode" />
+    </section>
+
     <section>
-      <section class="order-item" v-for="item in currentOrder.items" v-bind:key="item.id">
+      <section v-for="item in currentOrder.items" v-bind:key="item.id">
         <section class="order-item-product">
           <strong>{{ item.products[0].name }}</strong>
           <span>{{ formatPrice(item.products[0].price) }}</span>
@@ -19,6 +27,13 @@
       </section>
     </section>
 
+    <section class="order-total-section" v-if="currentOrder.payments.length > 0">
+      <div v-for="payment in currentOrder.payments" v-bind:key="payment.id">
+        <strong>Payment</strong>
+        <span>{{ formatPrice(-payment.amount) }}</span>
+      </div>
+    </section>
+
     <section class="order-total-section">
       <div>
         <strong>Subtotal</strong>
@@ -30,18 +45,74 @@
       </div>
       <div>
         <strong>Total</strong>
-        <span class="total-cost">{{ formatPrice(subTotal + taxAmount) }}</span>
+        <span class="total-cost">{{ formatPrice(totalAmount) }}</span>
       </div>
     </section>
+
+    <section class="order-total-section">
+      <div>
+        <strong>Remaining</strong>
+        <span class="total-cost">{{ formatPrice(totalAmount - appliedPayments) }}</span>
+      </div>
+    </section>
+
+    <button-styled value="Make Payment" :clickHandler="() => setDialogState(true)" />
+
+    <dialog-box
+      v-if="dialogIsOpen"
+      prompt="Payment Amount"
+      :okHandler="makePayment"
+      :cancelHandler="() => setDialogState(false)" />
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
+import ButtonStyled from "@/primatives/Button.vue";
+import Dialog from "@/components/Dialog.vue";
+import { APPLY_PAYMENT } from "@/graphql/queries/orderQueries";
+import { GENERATE_CUST_CODE } from "@/graphql/queries/custCodeQueries";
 
-@Component
+@Component({
+  components: {
+    ButtonStyled,
+    DialogBox: Dialog
+  }
+})
 export default class TableOrder extends Vue {
   @Prop() private readonly currentOrder: any;
+  @Prop() private readonly refetchFunc: any;
+
+  private dialogIsOpen = false;
+
+  private async makePayment(amount) {
+    this.setDialogState(false);
+    
+    await this.$apollo.mutate({
+      mutation: APPLY_PAYMENT,
+      variables: {
+        order: this.currentOrder.id,
+        amount: amount * 100
+      }
+    });
+
+    this.refetchFunc();
+  }
+
+  private async generateCustCode() {
+    await this.$apollo.mutate({
+      mutation: GENERATE_CUST_CODE,
+      variables: {
+        order: this.currentOrder.id
+      }
+    });
+
+    this.refetchFunc();
+  }
+
+  private setDialogState(open: boolean){
+    this.dialogIsOpen = open;
+  }
 
   private formatPrice(cents: number): string {
     return `\$${(cents / 100).toFixed(2)}`;
@@ -57,6 +128,16 @@ export default class TableOrder extends Vue {
   private get taxAmount(): number {
     return this.subTotal * 0.07;
   }
+
+  private get totalAmount(): number {
+    return this.subTotal + this.taxAmount;
+  }
+
+  private get appliedPayments(): number {
+    return this.currentOrder.payments.reduce(
+      (acc: number, payment: any) => acc + payment.amount, 0
+    );
+  }  
 }
 </script>
 

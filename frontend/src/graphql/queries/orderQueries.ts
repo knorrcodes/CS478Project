@@ -6,6 +6,10 @@ export const GET_LATEST_ORDER_QUERY = gql`
       num
       orders {
         id
+        cust_code {
+          id
+          code
+        }
         payments {
           id
           amount
@@ -57,6 +61,17 @@ export const CLOSE_ORDER_MUTATION = gql`
 export const ADD_ITEMS_TO_ORDER_MUTATION = gql`
   mutation AddItemsToOrder($order: ID!, $products: [Int!]!) {
     addItemToOrder(order: $order, products: $products) {
+      id
+    }
+  }
+`;
+
+export const APPLY_PAYMENT = gql`
+  mutation ApplyPayment($order: ID!, $amount: Int!) {
+    applyPayment(input: {
+      order: $order
+      amount: $amount
+    }){
       id
     }
   }

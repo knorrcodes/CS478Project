@@ -17,7 +17,7 @@ export default class RouterLinkStyled extends Vue {
 <style scoped>
 .text {
   background-color: #3678a8;
-  color: black;
+  color: white;
   width: 40%;
   height: 100px;
   margin-top: 5px;

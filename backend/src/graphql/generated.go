@@ -78,6 +78,7 @@ type ComplexityRoot struct {
 	}
 
 	Order struct {
+		CustCode  func(childComplexity int) int
 		EndTime   func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Items     func(childComplexity int) int
@@ -161,6 +162,7 @@ type OrderResolver interface {
 	Server(ctx context.Context, obj *models.Order) (*models.Server, error)
 	Items(ctx context.Context, obj *models.Order) ([]*models.OrderItem, error)
 	Payments(ctx context.Context, obj *models.Order) ([]*models.Payment, error)
+	CustCode(ctx context.Context, obj *models.Order) (*models.CustCode, error)
 }
 type OrderItemResolver interface {
 	Products(ctx context.Context, obj *models.OrderItem) ([]*models.Product, error)
@@ -367,6 +369,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StartOrder(childComplexity, args["input"].(NewOrderInput)), true
+
+	case "Order.cust_code":
+		if e.complexity.Order.CustCode == nil {
+			break
+		}
+
+		return e.complexity.Order.CustCode(childComplexity), true
 
 	case "Order.end_time":
 		if e.complexity.Order.EndTime == nil {
@@ -784,6 +793,7 @@ type Order {
     server: Server!
     items: [OrderItem!]!
     payments: [Payment!]!
+    cust_code: CustCode
 }
 
 type Table {
@@ -2136,6 +2146,40 @@ func (ec *executionContext) _Order_payments(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNPayment2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Order_cust_code(ctx context.Context, field graphql.CollectedField, obj *models.Order) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Order",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Order().CustCode(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.CustCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOCustCode2ᚖkoalaᚗposᚋsrcᚋmodelsᚐCustCode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OrderItem_id(ctx context.Context, field graphql.CollectedField, obj *models.OrderItem) (ret graphql.Marshaler) {
@@ -4968,6 +5012,17 @@ func (ec *executionContext) _Order(ctx context.Context, sel ast.SelectionSet, ob
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			})
+		case "cust_code":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Order_cust_code(ctx, field, obj)
 				return res
 			})
 		default:
