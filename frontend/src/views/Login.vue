@@ -40,7 +40,7 @@ const NEXT_PAGE_URL = "/tables";
   }
 })
 export default class LoginView extends Vue {
-  private serverCode: number|null = null;
+  private serverCode: number | null = null;
   private errorMsg = "";
 
   public beforeMount() {
@@ -52,6 +52,10 @@ export default class LoginView extends Vue {
   }
 
   private async serverCodeCheck() {
+    if (!this.serverCode) {
+      return;
+    }
+
     let resp;
     localStorage.setItem("server-code", this.serverCode.toString());
 
