@@ -30,7 +30,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
-import ButtonStyled from "@/primatives/Button.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 const NEXT_PAGE_URL = "/tables";
 

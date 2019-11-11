@@ -69,20 +69,21 @@
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
-import ButtonStyled from "@/primatives/Button.vue";
-import Dialog from "@/components/Dialog.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
+import DialogBox from "@/primatives/DialogBox.vue";
 import { APPLY_PAYMENT } from "@/graphql/queries/orderQueries";
 import { GENERATE_CUST_CODE } from "@/graphql/queries/custCodeQueries";
+import { Order } from "@/graphql/schema";
 
 @Component({
   components: {
     ButtonStyled,
-    DialogBox: Dialog
+    DialogBox
   }
 })
 export default class TableOrder extends Vue {
-  @Prop() private readonly currentOrder: any;
-  @Prop() private readonly refetchFunc: any;
+  @Prop() private readonly currentOrder!: Order;
+  @Prop() private readonly refetchFunc!: () => void;
 
   private dialogIsOpen = false;
 

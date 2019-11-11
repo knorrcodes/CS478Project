@@ -22,7 +22,8 @@ import {
   GET_ALL_TABLES_QUERY,
   SET_CURRENT_TABLE
 } from "@/graphql/queries/tableQueries";
-import ButtonStyled from "@/primatives/Button.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
+import { Table } from "@/graphql/schema";
 
 @Component({
   apollo: {
@@ -33,7 +34,7 @@ import ButtonStyled from "@/primatives/Button.vue";
   }
 })
 export default class TableView extends Vue {
-  private tables: any = null;
+  private tables: Table[] = [];
 
   private async setCurrentTable(id: number) {
     await this.$apollo.mutate({

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="$apollo.loading">Loading...</div>
+  <div v-if="$apollo.loading || !categoryData">Loading...</div>
   <div v-else class="container text-center">
     <h2>{{ categoryData.name }} Menu</h2>
 
@@ -21,9 +21,10 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQueries";
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
 import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
+import { Category } from "@/graphql/schema";
 
-import RouterLinkStyled from "@/primatives/RouterLink.vue";
-import ButtonStyled from "@/primatives/Button.vue";
+import RouterLinkStyled from "@/primatives/RouterLinkStyled.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 @Component({
   components: {
@@ -44,23 +45,28 @@ import ButtonStyled from "@/primatives/Button.vue";
   }
 })
 export default class CategoryView extends Vue {
-  @Prop() private addProductToOrder:
-    | undefined
-    | ((productId: number, finished: boolean) => void);
-  @Prop() private readonly catId: any;
-  private categoryData: any = null;
+  @Prop() private addProductToOrder!: (
+    productId: number,
+    extraCount: number
+  ) => void;
+  @Prop() private readonly catId!: number;
+  private categoryData: Category | null = null;
 
   private goBack() {
     this.$router.back();
   }
 
   private addProductItem(id: number) {
-    if (!this.addProductToOrder) {
+    if (!this.categoryData || !this.addProductToOrder) {
       return;
     }
     const product = this.categoryData.products.find(
       (item: any) => item.id === id
     );
+
+    if (!product) {
+      return;
+    }
 
     this.addProductToOrder(id, product.num_of_sides);
 
