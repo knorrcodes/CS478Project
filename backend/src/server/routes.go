@@ -25,11 +25,12 @@ func LoadRoutes(e *common.Environment, stores *stores.StoreCollection) http.Hand
 		r.HandlerFunc("GET", "/", handler.Playground("GraphQL playground", "/graphql"))
 		log.Info("GraphQL playground enabled")
 	}
+
 	r.Handler("POST", "/graphql",
-		mid.CheckAuthGraphQL(stores.Server,
+		mid.CheckAuthGraphQL(stores,
 			mid.SetSessionInfo(e, stores,
 				handler.GraphQL(
-					graphql.NewExecutableSchema(graphql.Config{Resolvers: &graphql.Resolver{}}),
+					graphql.NewExecutableSchema(graphql.NewConfig()),
 				))))
 
 	if e.IsDev() {
