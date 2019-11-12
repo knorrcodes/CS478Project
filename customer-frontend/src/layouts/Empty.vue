@@ -10,7 +10,7 @@
     <div class="container format">
       <div class="row">
         <div class="col-12">
-          <h1>Server Mode</h1>
+          <h1>Customer Mode</h1>
           <hr class="mb-4" />
           <slot />
         </div>
@@ -62,8 +62,9 @@ header {
 hr {
   width: 80%;
 }
+
 h1 {
-  font-weight: bold;
   text-align: center;
+  font-weight: bold;
 }
 </style>
