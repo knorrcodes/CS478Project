@@ -24,6 +24,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { Order } from "@/graphql/schema";
 import TableOrder from "@/components/TableOrder.vue";
 import StartTableOrder from "@/components/StartTableOrder.vue";
 import Category from "@/views/Category.vue";
@@ -35,7 +36,7 @@ import {
   START_NEW_ORDER_MUTATION,
   CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
-import ButtonStyled from "@/primatives/Button.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 @Component({
   components: {
@@ -67,7 +68,7 @@ import ButtonStyled from "@/primatives/Button.vue";
 })
 export default class InputOrder extends Vue {
   private currentTableId: number | null = null;
-  private currentOrder: any = null;
+  private currentOrder: Order | null = null;
   private currentOrderItem: number[] = [];
   private currentOrderItemCount: number = 0;
 
@@ -84,11 +85,14 @@ export default class InputOrder extends Vue {
       });
       return;
     }
-    console.log("refetch");
     this.$apollo.queries.currentOrder.refetch();
   }
 
   private async addProductToOrder(productId: number, extraCount: number = 0) {
+    if (!this.currentOrder) {
+      return;
+    }
+
     this.currentOrderItem.push(productId);
 
     if (extraCount > 0) {
@@ -131,6 +135,10 @@ export default class InputOrder extends Vue {
   }
 
   private async closeOrder() {
+    if (!this.currentOrder) {
+      return;
+    }
+
     await this.$apollo.mutate({
       mutation: CLOSE_ORDER_MUTATION,
       variables: {

@@ -5,16 +5,12 @@
     <div class="dialog">
       <div class="dialog-body">
         <span class="dialog-prompt">{{ prompt }}</span>
-        <input
-          type="text"
-          v-model="value"
-          v-focus
-          v-on:keyup.enter="() => okHandler(value)">
+        <input type="text" v-model="value" v-focus v-on:keyup.enter="() => okHandler(value)" />
       </div>
 
       <div class="dialog-controls">
-        <button @click="() => okHandler(value)">OK</button>
-        <button @click="cancelHandler">Cancel</button>
+        <button class="dialog-ok-btn" @click="() => okHandler(value)">OK</button>
+        <button class="dialog-cancel-btn" @click="cancelHandler">Cancel</button>
       </div>
     </div>
   </div>
@@ -24,12 +20,12 @@
 import { Vue, Prop, Component } from "vue-property-decorator";
 
 @Component
-export default class Dialog extends Vue {
+export default class DialogBox extends Vue {
   @Prop() private readonly prompt: any;
   @Prop() private readonly okHandler: any;
   @Prop() private readonly cancelHandler: any;
 
-  private value: number|null = null;
+  private value: number | null = null;
 }
 </script>
 

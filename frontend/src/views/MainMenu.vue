@@ -19,8 +19,9 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
-import ButtonStyled from "@/primatives/Button.vue";
-import RouterLinkStyled from "@/primatives/RouterLink.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
+import RouterLinkStyled from "@/primatives/RouterLinkStyled.vue";
+import { Category } from "@/graphql/schema";
 
 @Component({
   components: {
@@ -29,16 +30,10 @@ import RouterLinkStyled from "@/primatives/RouterLink.vue";
   },
   apollo: {
     categories: GET_ALL_CATEGORIES_QUERIES
-  },
-
-  methods: {
-    test() {
-      console.log("hello");
-    }
   }
 })
 export default class MainMenu extends Vue {
-  private categories: any = null;
+  private categories: Category[] = [];
 }
 </script>
 
