@@ -162,7 +162,7 @@ func (r *orderItemResolver) Order(ctx context.Context, obj *models.OrderItem) (*
 		return nil, errors.New("Failed to get storage")
 	}
 
-	return storeCollection.Order.GetOrderByID(obj.ID)
+	return storeCollection.Order.GetOrderByID(obj.OrderID)
 }
 
 type paymentResolver struct{ *Resolver }
