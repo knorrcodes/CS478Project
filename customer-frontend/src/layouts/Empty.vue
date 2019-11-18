@@ -10,7 +10,7 @@
     <div class="container format">
       <div class="row">
         <div class="col-12">
-          <h1>Server Mode</h1>
+          <h1>Customer Mode</h1>
           <hr class="mb-4" />
           <slot />
         </div>
@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ButtonStyled from "@/primatives/ButtonStyled.vue";
+import ButtonStyled from "@/primatives/Button.vue";
 
 @Component({
   components: {
@@ -30,7 +30,7 @@ import ButtonStyled from "@/primatives/ButtonStyled.vue";
 })
 export default class Main extends Vue {
   private logout() {
-    localStorage.removeItem("server-code");
+    localStorage.removeItem("customer-code");
     this.$router.push({ path: "/login" });
   }
 }
@@ -62,8 +62,9 @@ header {
 hr {
   width: 80%;
 }
+
 h1 {
-  font-weight: bold;
   text-align: center;
+  font-weight: bold;
 }
 </style>
