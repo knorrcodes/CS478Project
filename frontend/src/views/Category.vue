@@ -1,18 +1,17 @@
 <template>
-  <div v-if="$apollo.loading">Loading...</div>
+  <div v-if="$apollo.loading || !categoryData">Loading...</div>
   <div v-else class="container text-center">
-    <h1>{{ categoryData.name }} Menu</h1>
+    <h2>{{ categoryData.name }} Menu</h2>
 
-    <button type="button" @click="goBack" class="btn btn-secondary mx-1 my-1">&lt;- Back</button>
+    <button-styled :clickHandler="() => goBack()" value="&lt;- Back"></button-styled>
 
     <section class="products">
-      <button
+      <button-styled
         v-for="product in categoryData.products"
         v-bind:key="product.id"
-        class="btn btn-secondary mx-1 my-1"
-        type="button"
-        @click="addProductToOrder(product.id)"
-      >{{ product.name }}</button>
+        :clickHandler="() => addProductItem(product.id)"
+        :value="product.name"
+      ></button-styled>
     </section>
   </div>
 </template>
@@ -21,8 +20,17 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { GET_PRODUCTS_IN_CATEGORY_QUERIES } from "@/graphql/queries/categoryQueries";
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
+import { GET_ALL_CATEGORIES_QUERIES } from "@/graphql/queries/categoryQueries";
+import { Category } from "@/graphql/schema";
+
+import RouterLinkStyled from "@/primatives/RouterLinkStyled.vue";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 @Component({
+  components: {
+    RouterLinkStyled,
+    ButtonStyled
+  },
   apollo: {
     categoryData: {
       query: GET_PRODUCTS_IN_CATEGORY_QUERIES,
@@ -32,16 +40,41 @@ import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
           id: this.catId
         };
       }
-    }
+    },
+    categories: GET_ALL_CATEGORIES_QUERIES
   }
 })
 export default class CategoryView extends Vue {
-  @Prop() private addProductToOrder: any;
-  @Prop() private readonly catId: any;
-  private categoryData: any = null;
+  @Prop() private addProductToOrder!: (
+    productId: number,
+    extraCount: number
+  ) => void;
+  @Prop() private readonly catId!: number;
+  private categoryData: Category | null = null;
 
   private goBack() {
     this.$router.back();
+  }
+
+  private addProductItem(id: number) {
+    if (!this.categoryData || !this.addProductToOrder) {
+      return;
+    }
+    const product = this.categoryData.products.find(
+      (item: any) => item.id === id
+    );
+
+    if (!product) {
+      return;
+    }
+
+    this.addProductToOrder(id, product.num_of_sides);
+
+    if (product.num_of_sides > 0) {
+      this.$router.push({
+        path: "/cat/7"
+      });
+    }
   }
 }
 </script>

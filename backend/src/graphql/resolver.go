@@ -100,6 +100,15 @@ func (r *orderResolver) Server(ctx context.Context, obj *models.Order) (*models.
 	return storeCollection.Server.GetByID(obj.ServerID)
 }
 
+func (r *orderResolver) CustCode(ctx context.Context, obj *models.Order) (*models.CustCode, error) {
+	storeCollection := stores.GetStoreCollectionFromContext(ctx)
+	if storeCollection == nil {
+		return nil, errors.New("Failed to get storage")
+	}
+
+	return storeCollection.CustCode.GetCustCodeByOrderID(obj.ID)
+}
+
 func (r *orderResolver) Items(ctx context.Context, obj *models.Order) ([]*models.OrderItem, error) {
 	storeCollection := stores.GetStoreCollectionFromContext(ctx)
 	if storeCollection == nil {
@@ -153,7 +162,7 @@ func (r *orderItemResolver) Order(ctx context.Context, obj *models.OrderItem) (*
 		return nil, errors.New("Failed to get storage")
 	}
 
-	return storeCollection.Order.GetOrderByID(obj.ID)
+	return storeCollection.Order.GetOrderByID(obj.OrderID)
 }
 
 type paymentResolver struct{ *Resolver }

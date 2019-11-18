@@ -8,11 +8,12 @@ type ServerStore interface {
 
 // Server object structure
 type Server struct {
-	store   ServerStore
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Code    int    `json:"code"`
-	Manager bool   `json:"manager"`
+	store    ServerStore
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Code     int    `json:"code"`
+	Manager  bool   `json:"manager"`
+	CustCode string `json:"-"`
 }
 
 // NewServer creates a new Server object

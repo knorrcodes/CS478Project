@@ -13,6 +13,7 @@ type CustCodeStore interface {
 	GetCustCodes() ([]*models.CustCode, error)
 	GetCustCodeByID(id int) (*models.CustCode, error)
 	GetCustCodeByCode(code string) (*models.CustCode, error)
+	GetCustCodeByOrderID(id int) (*models.CustCode, error)
 	Save(c *models.CustCode) error
 	Delete(c *models.CustCode) error
 }
@@ -41,6 +42,20 @@ func (s *CustCode) GetCustCodeByID(id int) (*models.CustCode, error) {
 	}
 
 	sql := `WHERE "id" = ?`
+	codes, err := s.getCodesFromDatabase(sql, id)
+	if len(codes) == 0 {
+		return nil, err
+	}
+	return codes[0], err
+}
+
+// GetCustCodeByOrderID function for custCodeStore
+func (s *CustCode) GetCustCodeByOrderID(id int) (*models.CustCode, error) {
+	if id == 0 {
+		return nil, errors.New("CustCode Order ID required")
+	}
+
+	sql := `WHERE "order_id" = ?`
 	codes, err := s.getCodesFromDatabase(sql, id)
 	if len(codes) == 0 {
 		return nil, err

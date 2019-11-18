@@ -10,8 +10,15 @@ import BootstrapVue from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 
+
 Vue.component("login-layout", LoginLayout);
 Vue.component("empty-layout", EmptyLayout);
+
+Vue.directive("focus", {
+  inserted(el) {
+      el.focus();
+  }
+});
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);

@@ -28,15 +28,25 @@ fetch API; this example is in the form of an async function, the main idea
 is passing in the options object with a `headers` key:
 
 ```javascript
-async function postData(url = '/graphql', data = {}) {
+async function postData(url = "/graphql", data = {}) {
   const response = await fetch(url, {
-    method: 'POST', // GraphQL only response to POST
+    method: "POST", // GraphQL only response to POST
     headers: {
-      'Content-Type': 'application/json', // Content type must be json
-      'Authentication': 'Server 478', // Again, replace 478 with the code you want to use
+      "Content-Type": "application/json", // Content type must be json
+      Authentication: "Server 478" // Again, replace 478 with the code you want to use
     },
     body: JSON.stringify(data) // body data type must match "Content-Type" header
   });
   return await response.json(); // parses JSON response into native JavaScript objects
+}
+```
+
+## Customer Auth
+
+Customers are authenticated using the template `Customer: {CUST_CODE}`.
+
+```json
+{
+  "Authorization": "Customer 4PR46X"
 }
 ```

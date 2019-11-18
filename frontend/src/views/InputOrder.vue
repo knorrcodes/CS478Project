@@ -3,11 +3,13 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <button class="btn btn-secondary mx-1 my-1" @click="changeTables">Change Table</button>
-          <button class="btn btn-secondary mx-1 my-1" @click="closeOrder">Close Order</button>
-
+          <button-styled :clickHandler="changeTables" value="Change Table"></button-styled>
+          <button-styled :clickHandler="closeOrder" value="Close Order"></button-styled>
+          <button-styled :clickHandler="refetchOrder">
+            <RefreshIcon />
+          </button-styled>
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
-          <table-order v-else :currentOrder="currentOrder" />
+          <table-order v-else :currentOrder="currentOrder" :refetchFunc="refetchOrder" />
         </div>
 
         <div class="col-8">
@@ -25,6 +27,8 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { Order } from "@/graphql/schema";
+import RefreshIcon from "@/components/RefreshIcon.vue";
 import TableOrder from "@/components/TableOrder.vue";
 import StartTableOrder from "@/components/StartTableOrder.vue";
 import Category from "@/views/Category.vue";
@@ -36,13 +40,16 @@ import {
   START_NEW_ORDER_MUTATION,
   CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 @Component({
   components: {
     TableOrder,
     StartTableOrder,
     Category,
-    MainMenu
+    MainMenu,
+    ButtonStyled,
+    RefreshIcon
   },
   apollo: {
     currentOrder: {
@@ -66,7 +73,9 @@ import {
 })
 export default class InputOrder extends Vue {
   private currentTableId: number | null = null;
-  private currentOrder: any = null;
+  private currentOrder: Order | null = null;
+  private currentOrderItem: number[] = [];
+  private currentOrderItemCount: number = 0;
 
   public async mounted() {
     const resp = await this.$apollo.query({
@@ -81,19 +90,42 @@ export default class InputOrder extends Vue {
       });
       return;
     }
-    console.log("refetch");
     this.$apollo.queries.currentOrder.refetch();
   }
 
-  private async addProductToOrder(productId: number) {
+  private async addProductToOrder(productId: number, extraCount: number = 0) {
+    if (!this.currentOrder) {
+      return;
+    }
+
+    this.currentOrderItem.push(productId);
+
+    if (extraCount > 0) {
+      this.currentOrderItemCount = extraCount;
+    }
+
+    if (this.currentOrderItem.length !== this.currentOrderItemCount + 1) {
+      return;
+    }
+
     await this.$apollo.mutate({
       mutation: ADD_ITEMS_TO_ORDER_MUTATION,
       variables: {
         order: this.currentOrder.id,
-        products: [productId]
+        products: this.currentOrderItem
       }
     });
 
+    this.$apollo.queries.currentOrder.refetch();
+
+    this.currentOrderItem = [];
+    this.currentOrderItemCount = 0;
+    this.$router.push({
+      path: "/"
+    });
+  }
+
+  private refetchOrder() {
     this.$apollo.queries.currentOrder.refetch();
   }
 
@@ -111,6 +143,10 @@ export default class InputOrder extends Vue {
   }
 
   private async closeOrder() {
+    if (!this.currentOrder) {
+      return;
+    }
+
     await this.$apollo.mutate({
       mutation: CLOSE_ORDER_MUTATION,
       variables: {

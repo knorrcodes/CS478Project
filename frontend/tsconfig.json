@@ -13,12 +13,15 @@
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "mocha",
-      "chai"
+      "chai",
+      "jest"
     ],
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@t/*": [
+        "test/*"
       ]
     },
     "lib": [

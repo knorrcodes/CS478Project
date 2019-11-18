@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -48,6 +49,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	MinRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role Role) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -78,6 +80,7 @@ type ComplexityRoot struct {
 	}
 
 	Order struct {
+		CustCode  func(childComplexity int) int
 		EndTime   func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Items     func(childComplexity int) int
@@ -161,6 +164,7 @@ type OrderResolver interface {
 	Server(ctx context.Context, obj *models.Order) (*models.Server, error)
 	Items(ctx context.Context, obj *models.Order) ([]*models.OrderItem, error)
 	Payments(ctx context.Context, obj *models.Order) ([]*models.Payment, error)
+	CustCode(ctx context.Context, obj *models.Order) (*models.CustCode, error)
 }
 type OrderItemResolver interface {
 	Products(ctx context.Context, obj *models.OrderItem) ([]*models.Product, error)
@@ -367,6 +371,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StartOrder(childComplexity, args["input"].(NewOrderInput)), true
+
+	case "Order.cust_code":
+		if e.complexity.Order.CustCode == nil {
+			break
+		}
+
+		return e.complexity.Order.CustCode(childComplexity), true
 
 	case "Order.end_time":
 		if e.complexity.Order.EndTime == nil {
@@ -752,6 +763,14 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema.graphql", Input: `scalar Time
 
+directive @minRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+    MANAGER
+    SERVER
+    CUSTOMER
+}
+
 type Product {
     id: ID!
     name: String!
@@ -784,6 +803,7 @@ type Order {
     server: Server!
     items: [OrderItem!]!
     payments: [Payment!]!
+    cust_code: CustCode
 }
 
 type Table {
@@ -820,22 +840,22 @@ enum OrderStatus {
 }
 
 type Query {
-    product(id: ID!): Product
-    products: [Product!]!
+    product(id: ID!): Product @minRole(role: CUSTOMER)
+    products: [Product!]! @minRole(role: CUSTOMER)
 
-    category(id: ID!): Category
-    categories: [Category!]!
+    category(id: ID!): Category @minRole(role: CUSTOMER)
+    categories: [Category!]! @minRole(role: CUSTOMER)
 
-    server(code: Int!): Server
+    server(code: Int!): Server @minRole(role: SERVER)
 
-    table(id: ID!): Table
-    tables: [Table!]!
+    table(id: ID!): Table @minRole(role: SERVER)
+    tables: [Table!]! @minRole(role: SERVER)
 
-    custcode(id: ID = 0, code: String = ""): CustCode
-    custcodes: [CustCode!]!
+    custcode(id: ID = 0, code: String = ""): CustCode @minRole(role: CUSTOMER)
+    custcodes: [CustCode!]! @minRole(role: SERVER)
 
-    orders(server: ID = 0, status: OrderStatus = OPENED): [Order!]!
-    order(id: ID = 0, table: ID = 0): Order
+    orders(server: ID = 0, status: OrderStatus = OPENED): [Order!]! @minRole(role: SERVER)
+    order(id: ID = 0, table: ID = 0): Order @minRole(role: SERVER)
 }
 
 input NewProductInput {
@@ -858,16 +878,16 @@ input AddPaymentInput {
 }
 
 type Mutation {
-    createProduct(input: NewProductInput!): Product!
-    createCategory(name: String!): Category!
-    createTable(num: Int!): Table!
-    createCustCode(id: ID!): CustCode!
+    createProduct(input: NewProductInput!): Product! @minRole(role: MANAGER)
+    createCategory(name: String!): Category! @minRole(role: MANAGER)
+    createTable(num: Int!): Table! @minRole(role: MANAGER)
+    createCustCode(id: ID!): CustCode! @minRole(role: SERVER)
 
-    startOrder(input: NewOrderInput!): Order!
-    closeOrder(id: ID!): Order!
-    addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
-    deleteOrderItem(id: ID!): Order!
-    applyPayment(input: AddPaymentInput!): Payment
+    startOrder(input: NewOrderInput!): Order! @minRole(role: SERVER)
+    closeOrder(id: ID!): Order! @minRole(role: SERVER)
+    addItemToOrder(order: ID!, products: [Int!]!): OrderItem! @minRole(role: CUSTOMER)
+    deleteOrderItem(id: ID!): Order! @minRole(role: SERVER)
+    applyPayment(input: AddPaymentInput!): Payment @minRole(role: SERVER)
 }
 `},
 )
@@ -875,6 +895,20 @@ type Mutation {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_minRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 Role
+	if tmp, ok := rawArgs["role"]; ok {
+		arg0, err = ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_addItemToOrder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1514,8 +1548,32 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(NewProductInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(NewProductInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "MANAGER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Product); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Product`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1558,8 +1616,32 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCategory(rctx, args["name"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateCategory(rctx, args["name"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "MANAGER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Category); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Category`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1602,8 +1684,32 @@ func (ec *executionContext) _Mutation_createTable(ctx context.Context, field gra
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTable(rctx, args["num"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateTable(rctx, args["num"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "MANAGER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Table); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Table`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1646,8 +1752,32 @@ func (ec *executionContext) _Mutation_createCustCode(ctx context.Context, field 
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCustCode(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateCustCode(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.CustCode); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.CustCode`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1690,8 +1820,32 @@ func (ec *executionContext) _Mutation_startOrder(ctx context.Context, field grap
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().StartOrder(rctx, args["input"].(NewOrderInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().StartOrder(rctx, args["input"].(NewOrderInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Order); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Order`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1734,8 +1888,32 @@ func (ec *executionContext) _Mutation_closeOrder(ctx context.Context, field grap
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CloseOrder(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CloseOrder(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Order); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Order`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1778,8 +1956,32 @@ func (ec *executionContext) _Mutation_addItemToOrder(ctx context.Context, field 
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddItemToOrder(rctx, args["order"].(int), args["products"].([]int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddItemToOrder(rctx, args["order"].(int), args["products"].([]int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.OrderItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.OrderItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1822,8 +2024,32 @@ func (ec *executionContext) _Mutation_deleteOrderItem(ctx context.Context, field
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteOrderItem(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteOrderItem(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Order); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Order`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1866,8 +2092,32 @@ func (ec *executionContext) _Mutation_applyPayment(ctx context.Context, field gr
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ApplyPayment(rctx, args["input"].(AddPaymentInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ApplyPayment(rctx, args["input"].(AddPaymentInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Payment); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Payment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2136,6 +2386,40 @@ func (ec *executionContext) _Order_payments(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNPayment2ᚕᚖkoalaᚗposᚋsrcᚋmodelsᚐPayment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Order_cust_code(ctx context.Context, field graphql.CollectedField, obj *models.Order) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Order",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Order().CustCode(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.CustCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOCustCode2ᚖkoalaᚗposᚋsrcᚋmodelsᚐCustCode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OrderItem_id(ctx context.Context, field graphql.CollectedField, obj *models.OrderItem) (ret graphql.Marshaler) {
@@ -2715,8 +2999,32 @@ func (ec *executionContext) _Query_product(ctx context.Context, field graphql.Co
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Product(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Product(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Product); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Product`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2749,8 +3057,32 @@ func (ec *executionContext) _Query_products(ctx context.Context, field graphql.C
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Products(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Products(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.Product); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*koala.pos/src/models.Product`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2793,8 +3125,32 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Category(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Category(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Category); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Category`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2827,8 +3183,32 @@ func (ec *executionContext) _Query_categories(ctx context.Context, field graphql
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Categories(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Categories(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.Category); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*koala.pos/src/models.Category`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2871,8 +3251,32 @@ func (ec *executionContext) _Query_server(ctx context.Context, field graphql.Col
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Server(rctx, args["code"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Server(rctx, args["code"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Server); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Server`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2912,8 +3316,32 @@ func (ec *executionContext) _Query_table(ctx context.Context, field graphql.Coll
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Table(rctx, args["id"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Table(rctx, args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Table); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Table`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2946,8 +3374,32 @@ func (ec *executionContext) _Query_tables(ctx context.Context, field graphql.Col
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tables(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Tables(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.Table); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*koala.pos/src/models.Table`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2990,8 +3442,32 @@ func (ec *executionContext) _Query_custcode(ctx context.Context, field graphql.C
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Custcode(rctx, args["id"].(*int), args["code"].(*string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Custcode(rctx, args["id"].(*int), args["code"].(*string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "CUSTOMER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.CustCode); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.CustCode`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3024,8 +3500,32 @@ func (ec *executionContext) _Query_custcodes(ctx context.Context, field graphql.
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Custcodes(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Custcodes(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.CustCode); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*koala.pos/src/models.CustCode`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3068,8 +3568,32 @@ func (ec *executionContext) _Query_orders(ctx context.Context, field graphql.Col
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Orders(rctx, args["server"].(*int), args["status"].(*OrderStatus))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Orders(rctx, args["server"].(*int), args["status"].(*OrderStatus))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.Order); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*koala.pos/src/models.Order`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3112,8 +3636,32 @@ func (ec *executionContext) _Query_order(ctx context.Context, field graphql.Coll
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Order(rctx, args["id"].(*int), args["table"].(*int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Order(rctx, args["id"].(*int), args["table"].(*int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx, "SERVER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.MinRole == nil {
+				return nil, errors.New("directive minRole is not implemented")
+			}
+			return ec.directives.MinRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Order); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *koala.pos/src/models.Order`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4970,6 +5518,17 @@ func (ec *executionContext) _Order(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
+		case "cust_code":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Order_cust_code(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6041,6 +6600,15 @@ func (ec *executionContext) marshalNProduct2ᚖkoalaᚗposᚋsrcᚋmodelsᚐProd
 		return graphql.Null
 	}
 	return ec._Product(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx context.Context, v interface{}) (Role, error) {
+	var res Role
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRole2koalaᚗposᚋsrcᚋgraphqlᚐRole(ctx context.Context, sel ast.SelectionSet, v Role) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNServer2koalaᚗposᚋsrcᚋmodelsᚐServer(ctx context.Context, sel ast.SelectionSet, v models.Server) graphql.Marshaler {

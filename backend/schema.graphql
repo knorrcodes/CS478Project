@@ -1,5 +1,13 @@
 scalar Time
 
+directive @minRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+    MANAGER
+    SERVER
+    CUSTOMER
+}
+
 type Product {
     id: ID!
     name: String!
@@ -32,6 +40,7 @@ type Order {
     server: Server!
     items: [OrderItem!]!
     payments: [Payment!]!
+    cust_code: CustCode
 }
 
 type Table {
@@ -68,22 +77,22 @@ enum OrderStatus {
 }
 
 type Query {
-    product(id: ID!): Product
-    products: [Product!]!
+    product(id: ID!): Product @minRole(role: CUSTOMER)
+    products: [Product!]! @minRole(role: CUSTOMER)
 
-    category(id: ID!): Category
-    categories: [Category!]!
+    category(id: ID!): Category @minRole(role: CUSTOMER)
+    categories: [Category!]! @minRole(role: CUSTOMER)
 
-    server(code: Int!): Server
+    server(code: Int!): Server @minRole(role: SERVER)
 
-    table(id: ID!): Table
-    tables: [Table!]!
+    table(id: ID!): Table @minRole(role: SERVER)
+    tables: [Table!]! @minRole(role: SERVER)
 
-    custcode(id: ID = 0, code: String = ""): CustCode
-    custcodes: [CustCode!]!
+    custcode(id: ID = 0, code: String = ""): CustCode @minRole(role: CUSTOMER)
+    custcodes: [CustCode!]! @minRole(role: SERVER)
 
-    orders(server: ID = 0, status: OrderStatus = OPENED): [Order!]!
-    order(id: ID = 0, table: ID = 0): Order
+    orders(server: ID = 0, status: OrderStatus = OPENED): [Order!]! @minRole(role: SERVER)
+    order(id: ID = 0, table: ID = 0): Order @minRole(role: SERVER)
 }
 
 input NewProductInput {
@@ -106,14 +115,14 @@ input AddPaymentInput {
 }
 
 type Mutation {
-    createProduct(input: NewProductInput!): Product!
-    createCategory(name: String!): Category!
-    createTable(num: Int!): Table!
-    createCustCode(id: ID!): CustCode!
+    createProduct(input: NewProductInput!): Product! @minRole(role: MANAGER)
+    createCategory(name: String!): Category! @minRole(role: MANAGER)
+    createTable(num: Int!): Table! @minRole(role: MANAGER)
+    createCustCode(id: ID!): CustCode! @minRole(role: SERVER)
 
-    startOrder(input: NewOrderInput!): Order!
-    closeOrder(id: ID!): Order!
-    addItemToOrder(order: ID!, products: [Int!]!): OrderItem!
-    deleteOrderItem(id: ID!): Order!
-    applyPayment(input: AddPaymentInput!): Payment
+    startOrder(input: NewOrderInput!): Order! @minRole(role: SERVER)
+    closeOrder(id: ID!): Order! @minRole(role: SERVER)
+    addItemToOrder(order: ID!, products: [Int!]!): OrderItem! @minRole(role: CUSTOMER)
+    deleteOrderItem(id: ID!): Order! @minRole(role: SERVER)
+    applyPayment(input: AddPaymentInput!): Payment @minRole(role: SERVER)
 }

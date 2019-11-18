@@ -3,25 +3,24 @@
     <div class="id1 container">
       <div class="row justify-content-center">
         <form action>
-          <p class="text-center textFormat">Server Login</p>
+          <p class="text-center textFormat">User Login</p>
           <input
             id="serverCodeNumber"
             class="form-control input1 textFormat"
             v-model="serverCode"
             @keydown.enter.prevent="serverCodeCheck"
-            type="number"
-            autofocus
+            type="text"
+            v-focus
           />
           <div v-if="errorMsg">
             <h4 class="errorMessage">{{errorMsg}}</h4>
           </div>
           <br />
-          <button
-            type="button"
-            class="btn btn-primary"
+          <button-styled
             id="serverCodeButton"
-            @click="serverCodeCheck"
-          >Enter</button>
+            :clickHandler="() => serverCodeCheck()"
+            value="Enter"
+          ></button-styled>
         </form>
       </div>
     </div>
@@ -31,12 +30,17 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
+import ButtonStyled from "@/primatives/ButtonStyled.vue";
 
 const NEXT_PAGE_URL = "/tables";
 
-@Component
+@Component({
+  components: {
+    ButtonStyled
+  }
+})
 export default class LoginView extends Vue {
-  private serverCode: number = 0;
+  private serverCode: number | null = null;
   private errorMsg = "";
 
   public beforeMount() {
@@ -48,6 +52,10 @@ export default class LoginView extends Vue {
   }
 
   private async serverCodeCheck() {
+    if (!this.serverCode) {
+      return;
+    }
+
     let resp;
     localStorage.setItem("server-code", this.serverCode.toString());
 
@@ -81,7 +89,7 @@ export default class LoginView extends Vue {
 }
 .input1 {
   -webkit-appearance: none;
-  background: rgba(255, 255, 255, 0);
+  background: rgba(255, 255, 255, 0.63);
   text-align: center;
   border: none;
   display: block;
