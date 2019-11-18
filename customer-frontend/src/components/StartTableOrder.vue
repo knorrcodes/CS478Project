@@ -14,16 +14,10 @@ import { START_NEW_ORDER_MUTATION } from "@/graphql/queries/orderQueries";
 import { CHECK_FOR_CUST_CODE } from "@/graphql/queries/custCodeQueries";
 import ButtonStyled from "@/primatives/Button.vue";
 
-@Component({
-  components: {
-    ButtonStyled
-  },
-  apollo: {
-    cust_code: CHECK_FOR_CUST_CODE
-  }
-})
+@Component
 export default class TableOrder extends Vue {
   @Prop() private readonly startOrder: any;
+  cust_code = localStorage.getItem("customer-code");
 }
 </script>
 

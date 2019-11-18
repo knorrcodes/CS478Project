@@ -30,7 +30,7 @@ import ButtonStyled from "@/primatives/Button.vue";
 })
 export default class Main extends Vue {
   private logout() {
-    localStorage.removeItem("server-code");
+    localStorage.removeItem("customer-code");
     this.$router.push({ path: "/login" });
   }
 }

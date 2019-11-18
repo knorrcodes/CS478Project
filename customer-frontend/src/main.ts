@@ -16,14 +16,14 @@ Vue.component("empty-layout", EmptyLayout);
 
 Vue.directive("focus", {
   inserted(el) {
-      el.focus();
+    el.focus();
   }
 });
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
 
-if (!localStorage.getItem("server-code")) {
+if (!localStorage.getItem("customer-code")) {
   router.push({
     path: "/login"
   });

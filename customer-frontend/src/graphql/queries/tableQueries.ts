@@ -20,3 +20,22 @@ export const GET_ALL_TABLES_QUERY = gql`
     }
   }
 `;
+
+export const GET_CURRENT_TABLE_NOW = gql`
+query getCurrentTable($code: String!) {
+  custcode(code: $code){
+      order{
+        table{
+          id
+        }
+        items{
+          products{
+            name
+            price
+          }
+        }
+      }
+    }
+  }
+`;
+

@@ -9,9 +9,35 @@ export const GENERATE_CUST_CODE = gql`
 `;
 
 export const CHECK_FOR_CUST_CODE = gql`
-  query orders{
-    cust_code{
-      code
+query CheckCustCode($code: String!) {
+  custcode(code: $code) {
+    id
+  }
+}
+`;
+
+export const GET_CURRENT_CUST_ORDER = gql`
+query CheckCustCode($code: String!){
+  custcode(code: $code){
+    order{
+      id
+      table{
+        id
+      }
+      items{
+        products{
+          name
+          price
+        }
+      }
+      payments {
+        id
+        amount
+      }
+      cust_code{
+        code
+      }
     }
   }
+}
 `;

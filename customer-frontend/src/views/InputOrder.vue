@@ -3,10 +3,12 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
-          <table-order v-else :currentOrder="currentOrder" :refetchFunc="refetchOrder" />
+          <table-order
+            v-if="currentOrder"
+            :currentOrder="currentOrder"
+            :refetchFunc="refetchOrder"
+          />
         </div>
-
         <div class="col-8">
           <category
             v-if="$route.params.id"
@@ -23,7 +25,6 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import TableOrder from "@/components/TableOrder.vue";
-import StartTableOrder from "@/components/StartTableOrder.vue";
 import Category from "@/views/Category.vue";
 import MainMenu from "@/views/MainMenu.vue";
 import { GET_CURRENT_TABLE } from "@/graphql/queries/tableQueries";
@@ -33,33 +34,26 @@ import {
   START_NEW_ORDER_MUTATION,
   CLOSE_ORDER_MUTATION
 } from "@/graphql/queries/orderQueries";
+import { GET_CURRENT_CUST_ORDER } from "@/graphql/queries/custCodeQueries";
 import ButtonStyled from "@/primatives/Button.vue";
+import { GET_CURRENT_TABLE_NOW } from "@/graphql/queries/tableQueries";
 
 @Component({
   components: {
     TableOrder,
-    StartTableOrder,
     Category,
     MainMenu,
     ButtonStyled
   },
   apollo: {
     currentOrder: {
-      query: GET_LATEST_ORDER_QUERY,
+      query: GET_CURRENT_CUST_ORDER,
       variables() {
         return {
-          table: this.currentTableId
+          code: localStorage.getItem("customer-code")
         };
       },
-      update: data => {
-        if (data.table.orders.length > 0) {
-          return data.table.orders[0];
-        }
-        return null;
-      },
-      skip() {
-        return this.currentTableId === null;
-      }
+      update: data => data.custcode.order
     }
   }
 })
@@ -68,23 +62,6 @@ export default class InputOrder extends Vue {
   private currentOrder: any = null;
   private currentOrderItem: number[] = [];
   private currentOrderItemCount: number = 0;
-
-  public async mounted() {
-    const resp = await this.$apollo.query({
-      query: GET_CURRENT_TABLE
-    });
-
-    this.currentTableId = resp.data.currentTable;
-
-    if (!this.currentTableId) {
-      this.$router.push({
-        path: "/tables"
-      });
-      return;
-    }
-    console.log("refetch");
-    this.$apollo.queries.currentOrder.refetch();
-  }
 
   private async addProductToOrder(productId: number, extraCount: number = 0) {
     this.currentOrderItem.push(productId);
@@ -113,36 +90,6 @@ export default class InputOrder extends Vue {
 
   private refetchOrder() {
     this.$apollo.queries.currentOrder.refetch();
-  }
-
-  private async startNewOrder() {
-    await this.$apollo.mutate({
-      mutation: START_NEW_ORDER_MUTATION,
-      variables: {
-        input: {
-          table: this.currentTableId
-        }
-      }
-    });
-
-    this.$apollo.queries.currentOrder.refetch();
-  }
-
-  private async closeOrder() {
-    await this.$apollo.mutate({
-      mutation: CLOSE_ORDER_MUTATION,
-      variables: {
-        id: this.currentOrder.id
-      }
-    });
-
-    this.$apollo.queries.currentOrder.refetch();
-  }
-
-  private changeTables() {
-    this.$router.push({
-      path: "/tables"
-    });
   }
 }
 </script>

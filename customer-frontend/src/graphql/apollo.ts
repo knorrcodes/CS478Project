@@ -14,12 +14,12 @@ const httpLink = new HttpLink({
 
 // Set auth JWT on each request if available
 const authLink = setContext((_, { headers }) => {
-  const code = localStorage.getItem("server-code");
+  const code = localStorage.getItem("customer-code");
 
   return {
     headers: {
       ...headers,
-      authorization: code ? `Server ${code}` : ""
+      authorization: code ? `Customer ${code}` : ""
     }
   };
 });

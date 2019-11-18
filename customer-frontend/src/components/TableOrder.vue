@@ -2,10 +2,13 @@
   <div class="ticketOrder mt-5">
     <h3>Table Order</h3>
 
-    <section v-if="currentOrder.cust_code" class="customer-code order-item-product">
-      <strong>Code:</strong>
-      <span>{{ currentOrder.cust_code.code }}</span>
+    <section>
+      <section class="order-item-product">
+        <strong>Code:</strong>
+        <span>{{currentOrder.cust_code.code}}</span>
+      </section>
     </section>
+    <hr class="mt-0 mb-2" />
 
     <section>
       <section v-for="item in currentOrder.items" v-bind:key="item.id">

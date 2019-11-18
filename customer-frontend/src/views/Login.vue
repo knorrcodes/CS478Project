@@ -29,10 +29,10 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { GET_SERVER_QUERY } from "@/graphql/queries/serverQueries";
+import { CHECK_FOR_CUST_CODE } from "@/graphql/queries/custCodeQueries";
 import ButtonStyled from "@/primatives/Button.vue";
 
-const NEXT_PAGE_URL = "/tables";
+const NEXT_PAGE_URL = "/";
 
 @Component({
   components: {
@@ -44,7 +44,7 @@ export default class LoginView extends Vue {
   private errorMsg = "";
 
   public beforeMount() {
-    if (localStorage.getItem("server-code")) {
+    if (localStorage.getItem("customer-code")) {
       this.$router.push({
         path: NEXT_PAGE_URL
       });
@@ -57,17 +57,17 @@ export default class LoginView extends Vue {
     }
 
     let resp;
-    localStorage.setItem("server-code", this.serverCode.toString());
+    localStorage.setItem("customer-code", this.serverCode.toString());
 
     try {
       resp = await this.$apollo.query({
-        query: GET_SERVER_QUERY,
+        query: CHECK_FOR_CUST_CODE,
         variables: {
           code: this.serverCode
         }
       });
     } catch (e) {
-      localStorage.removeItem("server-code");
+      localStorage.removeItem("customer-code");
 
       if (e.message.includes("401")) {
         this.errorMsg = "Invalid server code";
