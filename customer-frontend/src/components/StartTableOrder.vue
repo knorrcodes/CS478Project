@@ -2,7 +2,7 @@
   <div class="ticketOrder">
     <h3>Table Order</h3>
 
-    <div v-if="cust_code == null">
+    <div v-if="!custCode">
       <p>Please ask your server to generate a code for you</p>
     </div>
   </div>
@@ -17,7 +17,7 @@ import ButtonStyled from "@/primatives/Button.vue";
 @Component
 export default class TableOrder extends Vue {
   @Prop() private readonly startOrder: any;
-  cust_code = localStorage.getItem("customer-code");
+  private custCode = localStorage.getItem("customer-code");
 }
 </script>
 
