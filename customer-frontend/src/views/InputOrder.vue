@@ -86,6 +86,9 @@ export default class InputOrder extends Vue {
 
     this.currentOrderItem = [];
     this.currentOrderItemCount = 0;
+    this.$router.push({
+      path: "/"
+    });
   }
 
   private refetchOrder() {
