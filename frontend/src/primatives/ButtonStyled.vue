@@ -1,6 +1,9 @@
 <template>
   <div class="dspl">
-    <button class="btn bg mx-1 my-1" type="button" @click="clickHandler">{{value}}</button>
+    <button class="btn bg mx-1 my-1" type="button" @click="clickHandler">
+      {{value}}
+      <slot />
+    </button>
   </div>
 </template>
 

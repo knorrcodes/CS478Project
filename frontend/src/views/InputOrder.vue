@@ -3,8 +3,11 @@
     <div class="container">
       <div class="row">
         <div class="col-4 px-4">
-          <button-styled :clickHandler="() => changeTables()" value="Change Table"></button-styled>
-          <button-styled :clickHandler="() =>closeOrder()" value="Close Order"></button-styled>
+          <button-styled :clickHandler="changeTables" value="Change Table"></button-styled>
+          <button-styled :clickHandler="closeOrder" value="Close Order"></button-styled>
+          <button-styled :clickHandler="refetchOrder">
+            <RefreshIcon />
+          </button-styled>
           <start-table-order v-if="!currentOrder" :startOrder="startNewOrder"></start-table-order>
           <table-order v-else :currentOrder="currentOrder" :refetchFunc="refetchOrder" />
         </div>
@@ -25,6 +28,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Order } from "@/graphql/schema";
+import RefreshIcon from "@/components/RefreshIcon.vue";
 import TableOrder from "@/components/TableOrder.vue";
 import StartTableOrder from "@/components/StartTableOrder.vue";
 import Category from "@/views/Category.vue";
@@ -44,7 +48,8 @@ import ButtonStyled from "@/primatives/ButtonStyled.vue";
     StartTableOrder,
     Category,
     MainMenu,
-    ButtonStyled
+    ButtonStyled,
+    RefreshIcon
   },
   apollo: {
     currentOrder: {
@@ -115,6 +120,9 @@ export default class InputOrder extends Vue {
 
     this.currentOrderItem = [];
     this.currentOrderItemCount = 0;
+    this.$router.push({
+      path: "/"
+    });
   }
 
   private refetchOrder() {
