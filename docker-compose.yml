@@ -1,0 +1,30 @@
+version: "3.6"
+services:
+  pos-backend:
+    image: koala-pos-backend
+    depends_on:
+      - pos-database
+    ports:
+      - 80:9000
+
+  pos-database:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: koala-pos
+    volumes:
+      - pos-db-data:/var/lib/mysql
+    command: mysqld --ansi --sql-mode=ANSI,TRADITIONAL
+
+  pos-server-ui:
+    image: koala-pos-server-ui
+    ports:
+      - 80:9001
+
+  pos-customer-ui:
+    image: koala-pos-customer-ui
+    ports:
+      - 80:9002
+
+volumes:
+  pos-db-data:

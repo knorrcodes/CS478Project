@@ -56,6 +56,13 @@ func BuildInDockerClean() error {
 	return buildInDocker(true)
 }
 
+func BuildProd() error {
+	if err := buildInDocker(true); err != nil {
+		return err
+	}
+	return sh.RunV("docker", "build", "-t", "koala-pos-backend", ".")
+}
+
 func buildInDocker(clean bool) error {
 	pwd, _ := os.Getwd()
 	gopath := lookupEnv("GOPATH", "")

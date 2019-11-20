@@ -1,0 +1,16 @@
+[Logging]
+Enabled = true
+EnableHTTP = true
+Level = "debug"
+
+[Database]
+Address = "pos-database"
+Username = "root"
+Password = "password"
+Name = "koala-pos"
+
+[Webserver]
+Port = 80
+
+[Auth]
+SigningKey = ""
