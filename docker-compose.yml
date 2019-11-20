@@ -5,7 +5,7 @@ services:
     depends_on:
       - pos-database
     ports:
-      - 80:9000
+      - 127.0.0.1:9000:80
 
   pos-database:
     image: mariadb:latest
@@ -19,12 +19,12 @@ services:
   pos-server-ui:
     image: koala-pos-server-ui
     ports:
-      - 80:9001
+      - 127.0.0.1:9001:80
 
   pos-customer-ui:
     image: koala-pos-customer-ui
     ports:
-      - 80:9002
+      - 127.0.0.1:9002:80
 
 volumes:
   pos-db-data:
