@@ -3,7 +3,7 @@
     <div class="id1 container">
       <div class="row justify-content-center">
         <form action>
-          <p class="text-center textFormat">User Login</p>
+          <p class="text-center textFormat">Customer Login</p>
           <input
             id="serverCodeNumber"
             class="form-control input1 textFormat"
