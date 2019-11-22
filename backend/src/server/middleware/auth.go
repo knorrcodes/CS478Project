@@ -54,9 +54,8 @@ func serverAuth(w http.ResponseWriter, r *http.Request, code string, servers sto
 }
 
 func customerAuth(w http.ResponseWriter, r *http.Request, code string, custcodeStore stores.CustCodeStore, next http.Handler) {
-	log.Debug(code)
-	_, err := custcodeStore.GetCustCodeByCode(code)
-	if err != nil {
+	custcode, err := custcodeStore.GetCustCodeByCode(code)
+	if custcode == nil || err != nil {
 		writeAuthErrorResponse(w)
 		return
 	}
