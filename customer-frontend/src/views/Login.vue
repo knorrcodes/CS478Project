@@ -70,7 +70,7 @@ export default class LoginView extends Vue {
       localStorage.removeItem("customer-code");
 
       if (e.message.includes("401")) {
-        this.errorMsg = "Invalid server code";
+        this.errorMsg = "Customer code is not active";
       } else {
         this.errorMsg = "An error occured";
       }
